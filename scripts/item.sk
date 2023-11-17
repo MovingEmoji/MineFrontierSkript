@@ -1,0 +1,1166 @@
+function openitemlist(p: player, page: number):
+	open chest with 6 rows named "&a&lアイテムリスト &7Page:%{_page}%" for {_p}
+	set {_start} to 45 * {_page} - 44
+	set {_slot} to 0
+	set {_c} to 0
+	while {_slot} < 45:
+		if {item.save.list::%{_start}%} is set:
+			set slot {_slot} of {_p}'s current inventory to {item.save.list::%{_start}%}
+			add 1 to {_slot}
+		if {_start} > 100:
+			exit loop
+		add 1 to {_start}
+	set {_slot} to 45
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named ""
+		add 1 to {_slot}
+	set slot 53 of {_p}'s current inventory to light green wool named "&a次のページへ"
+	set slot 45 of {_p}'s current inventory to red wool named "&a前のページへ"
+function openparamui(p: player, i: item):
+	set {_uuid} to uuid of {_p}
+	set {_inv} to chest inventory with 6 rows named "&a&lアイテムパラメーター設定"
+	open {_inv} for {_p}
+	set {_c} to 0
+	loop 9 times:
+		set slot {_c} of {_inv} to black stained glass pane named "&cパラメーターを設定してください"
+		add 1 to {_c}
+	set slot 4 of {_inv} to refreshitem({_i})
+	set slot 10 of {_inv} to name tag named "&6&lアイテム名の変更"
+	set slot 11 of {_inv} to clock named "&6&lアイテムタイプの変更"
+	set slot 12 of {_inv} to oak sign named "&6&l職業制限の変更"
+	set slot 13 of {_inv} to ender eye named "&6&lスロット制限の変更"
+	set slot 14 of {_inv} to iron ingot named "&6&l要求レベルの変更"
+	set slot 15 of {_inv} to feather named "&6&l攻撃速度の変更"
+	set slot 16 of {_inv} to diamond named "&6&l強化枠の変更"
+	set slot 19 of {_inv} to red dye named "&c&l攻撃力の変更"
+	set slot 20 of {_inv} to blue dye named "&9&l防御力の変更"
+	set slot 21 of {_inv} to yellow dye named "&e&l魔力の変更"
+	set slot 22 of {_inv} to light green dye named "&a&l体力の変更"
+	set slot 23 of {_inv} to magenta dye named "&d&lMPの変更"
+	set slot 24 of {_inv} to green dye named "&2&lDEX値の変更"
+	set slot 25 of {_inv} to nether star named "&6&lレアリティの設定"
+	set slot 28 of {_inv} to wood sword named "&6&lデフォルト攻撃力の変更"
+	set slot 29 of {_inv} to paper named "&6&l説明文の変更"
+	set slot 30 of {_inv} to sunflower named "&6&l値段の変更"
+
+	set {_parameters} to tag "Parameters" of nbt of slot 4 of {_inv}
+	
+	
+	if tag "HideFlags" of nbt of {_i} is not 127:
+		set slot 37 of {_inv} to gray dye named "&7アイテムの詳細を隠す" with lore "&eクリックして有効化"
+	if tag "HideFlags" of nbt of {_i} is 127:
+		set slot 37 of {_inv} to light green dye named "&a&lアイテムの詳細を隠す" with lore "&eクリックして無効化"
+	if tag "Enchantments" of nbt of {_i} is not set:
+		set slot 38 of {_inv} to gray dye named "&7アイテムを輝かせる" with lore "&eクリックして有効化"
+	if tag "Enchantments" of nbt of {_i} is set:
+		set slot 38 of {_inv} to light green dye named "&a&lアイテムを輝かせる" with lore "&eクリックして無効化"
+	if tag "Unbreakable" of nbt of {_i} is not set:
+		set slot 39 of {_inv} to gray dye named "&7アイテムの耐久値を無限にする" with lore "&eクリックして有効化"
+	if tag "Unbreakable" of nbt of {_i} is set:
+		set slot 39 of {_inv} to light green dye named "&a&lアイテムの耐久値を無限にする" with lore "&eクリックして無効化"
+	set {_gold} to tag "Gold" of {_parameters}
+	set slot 41 of {_inv} to bell named "&e見えない数値一覧" with lore "&f値段: %{_gold}%Gold"
+	if {item.type.cache::%{_uuid}%} is "new":
+		set slot 43 of {_inv} to oak door named "&b&l保存する"
+	if {item.type.cache::%{_uuid}%} is "update":
+		set slot 43 of {_inv} to oak door named "&b&l上書きする"
+
+function refreshitem(i: item) :: item:
+	set {_parameters} to tag "Parameters" of nbt of {_i}
+	set {_stones} to tag "Stones" of nbt of {_i}
+	set {_lore::0} to " "
+	set {_lore::1} to "&6&l【 概要 】"
+	set {_lore::2} to "  &e&lアイテムタイプ&7: &f&l%tag ""Type"" of {_parameters}%"
+	if tag "Job" of {_parameters} is not "なし":
+		set {_lore::4} to "  &e&l職業制限&7: &f&l%tag ""Job"" of {_parameters}%"
+	if tag "Slot" of {_parameters} is not "なし":
+		set {_lore::5} to "  &e&lスロット制限&7: &f&l%tag ""Slot"" of {_parameters}%"
+	if tag "Level" of {_parameters} is not -1:
+		if tag "Type" of {_parameters} is not "強化石":
+			set {_lore::6} to "  &e&l要求レベル&7: &fLv%tag ""Level"" of {_parameters}%"
+		if tag "Type" of {_parameters} is "強化石":
+			set {_lore::6} to "  &e&l装備要求レベル&7: &fLv%tag ""Level"" of {_parameters}%&f&l以上"
+	#set {_lore::6} to " "
+	if tag "Rarity" of {_parameters} is "コモン":
+		set {_lore::3} to "  &e&lレアリティ&7: &f[&6✯&7✯✯✯✯&f]"
+	if tag "Rarity" of {_parameters} is "アンコモン":
+		set {_lore::3} to "  &e&lレアリティ&7: &f[&6✯✯&7✯✯✯&f]"
+	if tag "Rarity" of {_parameters} is "レア":
+		set {_lore::3} to "  &e&lレアリティ&7: &f[&6✯✯✯&7✯✯&f]"
+	if tag "Rarity" of {_parameters} is "エピック":
+		set {_lore::3} to "  &e&lレアリティ&7: &f[&6✯✯✯✯&7✯&f]"
+	if tag "Rarity" of {_parameters} is "レジェンダリー":
+		set {_lore::3} to "  &e&lレアリティ&7: &f[&6✯✯✯✯✯&f]"
+	set {_damage} to tag "Damage" of {_parameters}
+	set {_protection} to tag "Protection" of {_parameters}
+	set {_magicdamage} to tag "MagicDamage" of {_parameters}
+	set {_health} to tag "Health" of {_parameters}
+	set {_mp} to tag "MP" of {_parameters}
+	set {_dex} to tag "DEX" of {_parameters}
+	if tag "Stone" of {_parameters} is not 0:
+		set {_c} to 1
+		set {_l} to tag "Stone" of {_parameters}
+		loop {_l} times:
+			if tag "Stone%{_c}%" of {_stones} is not 0:
+				set {_id} to tag "Stone%{_c}%" of {_stones}
+				set {_sparameters} to tag "Parameters" of nbt of {item.save.list::%{_id}%}
+				set {_n} to tag "Damage" of {_sparameters}
+				set {_damage} to {_damage} + {_n}
+				set {_n} to tag "Protection" of {_sparameters}
+				set {_protection} to {_protection} + {_n}
+				set {_n} to tag "MagicDamage" of {_sparameters}
+				set {_magicdamage} to {_magicdamage} + {_n}
+				set {_n} to tag "Health" of {_sparameters}
+				set {_health} to {_health} + {_n}
+				set {_n} to tag "MP" of {_sparameters}
+				set {_mp} to {_mp} + {_n}
+				set {_n} to tag "DEX" of {_sparameters}
+				set {_dex} to {_dex} + {_n}
+			delete {_n}
+			add 1 to {_c}
+	if {_damage} > 0:
+		set {_lore::10} to "  &c&l攻撃力&7: &c&l+%{_damage}%"
+		set {_none} to true
+	if {_damage} < 0:
+		set {_lore::10} to "  &c&l攻撃力&7: &c&l%{_damage}%"
+		set {_none} to true
+	if {_protection} > 0:
+		set {_lore::11} to "  &9&l防御力&7: &9&l+%{_protection}%"
+		set {_none} to true
+	if {_protection} < 0:
+		set {_lore::11} to "  &9&l防御力&7: &9&l%{_protection}%"
+		set {_none} to true
+	if {_magicdamage} > 0:
+		set {_lore::12} to "  &e&l魔力&7: &e&l+%{_magicdamage}%"
+		set {_none} to true
+	if {_magicdamage} < 0:
+		set {_lore::12} to "  &e&l魔力&7: &e&l%{_magicdamage}%"
+		set {_none} to true
+	if {_health} > 0:
+		set {_lore::13} to "  &a&l体力&7: &a&l+%{_health}%"
+		set {_none} to true
+	if {_health} < 0:
+		set {_lore::13} to "  &a&l体力&7: &a&l%{_health}%"
+		set {_none} to true
+	if {_mp} > 0:
+		set {_lore::14} to "  &d&lMP&7: &d&l+%{_mp}%"
+		set {_none} to true
+	if {_mp} < 0:
+		set {_lore::14} to "  &d&lMP&7: &d&l%{_mp}%"
+		set {_none} to true
+	if {_dex} > 0:
+		set {_lore::15} to "  &2&lDEX&7: &2&l+%{_dex}%"
+		set {_none} to true
+	if {_dex} < 0:
+		set {_lore::15} to "  &2&lDEX&7: &2&l%{_dex}%"
+		set {_none} to true
+	if {_none} is set:
+		set {_lore::8} to " "
+		set {_lore::9} to "&6&l【 性能 】"
+		
+	set {_attribute::*} to tag "AttributeModifiers" of nbt of {_i}
+	loop {_attribute::*}:
+		if tag "Name" of loop-value is "generic.attack_speed":
+			if tag "Type" of {_parameters} is not "アイテム" or "強化石" or "素材" or "防具":
+				set {_pad1} to true
+				if tag "Amount" of loop-value is -4:
+					set {_lore::17} to "  &7攻撃速度 &f[&8▶▶▶▶▶&f]"
+				if tag "Amount" of loop-value > -4:
+					if tag "Amount" of loop-value <= -3.2:
+						set {_lore::17} to "  &7攻撃速度 &f[&a▶&8▶▶▶▶&f]"
+					if tag "Amount" of loop-value > -3.2:
+						if tag "Amount" of loop-value <= -2.4:
+							set {_lore::17} to "  &7攻撃速度 &f[&a▶▶&8▶▶▶&f]"
+						if tag "Amount" of loop-value > -2.4:
+							if tag "Amount" of loop-value <= -1.6:
+								set {_lore::17} to "  &7攻撃速度 &f[&a▶▶▶&8▶▶&f]"
+							if tag "Amount" of loop-value > -1.6:
+								if tag "Amount" of loop-value <= -0.8:
+									set {_lore::17} to "  &7攻撃速度 &f[&a▶▶▶▶&8▶&f]"
+								if tag "Amount" of loop-value > -0.8:
+									set {_lore::17} to "  &7攻撃速度 &f[&a▶▶▶▶▶&f]"
+	if tag "Stone" of {_parameters} is not 0:
+		set {_pad1} to true
+		set {_c} to 1
+		set {_t} to ""
+		set {_l} to tag "Stone" of {_parameters}
+		loop {_l} times:
+			if tag "Stone%{_c}%" of {_stones} is not 0:
+				set {_t} to "%{_t}%&a&l〇"
+			if tag "Stone%{_c}%" of {_stones} is 0:
+				set {_t} to "%{_t}%&8〇"
+			add 1 to {_c}
+		set {_lore::18} to "  &7強化枠 &f[%{_t}%&f]"
+	if {_pad1} is true:
+		set {_lore::16} to " "
+	set {_lore::19} to " "
+	set {_lore::20} to "&6&l【 説明 】"
+	set {_info} to tag "Info" of {_parameters}
+	set {_info::*} to {_info} split at "//"
+	set {_c} to 21
+	loop {_info::*}:
+		set {_lore::%{_c}%} to "  %loop-value%"
+		add 1 to {_c}
+	set {_lore::99} to " "
+	set {_lore::100} to "&7Serial: %tag ""Id"" of {_parameters}%.%tag ""Version"" of {_parameters}%"
+	set {_i}'s lore to {_lore::*}
+	return {_i}
+
+on inventory click:
+	if index of event-slot is not -999:
+		if event-inventory is not player's inventory:
+			if name of player's current inventory is "&a&lアイテム調整":
+				if index of event-slot is not 4:
+					cancel event
+				else:
+					wait 1 tick
+					if slot index of event-slot of player's current inventory is not air:
+						set {_item} to slot index of event-slot of player's current inventory
+						set {item.type.cache::%player's uuid%} to "update"
+						openparamui(player,{_item})
+					stop
+
+			if name of player's current inventory is "&a&lアイテム作成":
+				if index of event-slot is not 4:
+					cancel event
+				else:
+					wait 1 tick
+					if slot index of event-slot of player's current inventory is not air:
+						set {_item} to slot index of event-slot of player's current inventory
+						set {item.type.cache::%player's uuid%} to "new"
+						add "{Parameters:{Damage:0,Protection:0,Health:0,MagicDamage:0,MP:0,DEX:0,Level:-1,Job:'なし',Slot:'なし',Type:'アイテム',Info:'&8&lなし',Gold:0,Rarity:'コモン',Stone:0,Version:1,Id:0}}" to nbt of {_item}
+						add "{AttributeModifiers:[{AttributeName:'generic.attack_speed',Name:'generic.attack_speed',Amount:-4.0,Operation:0,UUID:[I;1651970931,-1508882340,-1475386211,-1849167428],Slot:'mainhand'},{AttributeName:'generic.attack_damage',Name:'generic.attack_damage',Amount:100,Operation:0,UUID:[I;1651970931,-1508882340,-1475386211,-1849167428],Slot:'mainhand'}]}" to nbt of {_item}
+						openparamui(player,{_item})
+					stop
+
+			if name of player's current inventory is "&a&lアイテムパラメーター設定":
+				cancel event
+				if event-item's name is "&7アイテムを輝かせる":
+					add "{Enchantments:[{id:'minecraft:silk_touch',lvl:1}]}" to nbt of slot 4 of player's current inventory
+					openparamui(player,slot 4 of player's current inventory)
+
+				if event-item's name is "&a&lアイテムを輝かせる":
+					add "{Enchantments:[]}" to nbt of slot 4 of player's current inventory
+					openparamui(player,slot 4 of player's current inventory)
+
+				if event-item's name is "&7アイテムの詳細を隠す":
+					add "{HideFlags:127}" to nbt of slot 4 of player's current inventory
+					openparamui(player,slot 4 of player's current inventory)
+
+				if event-item's name is "&a&lアイテムの詳細を隠す":
+					add "{HideFlags:0}" to nbt of slot 4 of player's current inventory
+					openparamui(player,slot 4 of player's current inventory)
+
+				if event-item's name is "&7アイテムの耐久値を無限にする":
+					add "{Unbreakable:1}" to nbt of slot 4 of player's current inventory
+					openparamui(player,slot 4 of player's current inventory)
+
+				if event-item's name is "&a&lアイテムの耐久値を無限にする":
+					add "{Unbreakable:0}" to nbt of slot 4 of player's current inventory
+					openparamui(player,slot 4 of player's current inventory)
+
+				if event-item is oak door named "&b&l保存する":
+					set {_item} to slot 4 of player's current inventory
+					set {_parameters} to tag "Parameters" of nbt of {_item}
+					add 1 to {item.save.number}
+					set tag "Id" of {_parameters} to {item.save.number}
+					add "{Parameters:%{_parameters}%}" to nbt of {_item}
+					set {_item} to refreshitem({_item})
+					set {item.save.list::%{item.save.number}%} to {_item}
+					close player's inventory
+					send "&a&lアイテム&f「 &r%{_item}'s display name% &f」&a&lを保存しました &7(ID:%{item.save.number}%&7)"
+					give player {_item}
+					stop
+
+				if event-item is oak door named "&b&l上書きする":
+					set {_item} to slot 4 of player's current inventory
+					set {_parameters} to tag "Parameters" of nbt of {_item}
+					set {_c} to tag "Version" of {_parameters}
+					set tag "Version" of {_parameters} to {_c} + 1
+					add "{Parameters:%{_parameters}%}" to nbt of {_item}
+					set {_item} to refreshitem({_item})
+					set {_id} to tag "Id" of {_parameters}
+					set {item.save.list::%{_id}%} to {_item}
+					close player's inventory
+					send "&a&lアイテム&f「 &r%{_item}'s display name% &f」&a&lを上書きしました &7(ID:%{_id}%&7)"
+					give player {_item}
+					stop
+
+				if event-item is iron ingot named "&6&l要求レベルの変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&6&l要求レベルの変更" for player
+					set slot 8 of player's current inventory to cauldron named "&6要求レベルをなくす"
+
+				if event-item is feather named "&6&l攻撃速度の変更":
+					set {_i} to slot 4 of player's current inventory
+					open chest with 1 row named "&6&l攻撃速度の変更" for player
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 2 of player's current inventory to redstone block named "&c-0.1"
+					set slot 3 of player's current inventory to redstone named "&c-0.01"
+					set slot 4 of player's current inventory to {_i}
+					set slot 5 of player's current inventory to emerald named "&a+0.01"
+					set slot 6 of player's current inventory to emerald block named "&a+0.1"
+					set slot 8 of player's current inventory to cauldron named "&6攻撃速度を最速にする"
+
+				if event-item is name tag named "&6&lアイテム名の変更":
+					set {item.create.cache::%player's uuid%} to slot 4 of player's current inventory
+					close player's inventory
+					send "&6&l設定するアイテム名を入力してください"
+
+				if event-item is paper named "&6&l説明文の変更":
+					set {item.create.info::%player's uuid%} to slot 4 of player's current inventory
+					close player's inventory
+					send "&6&l設定する説明文を入力してください (4行まで、改行は[ &f// &6&l]で記入してください)"
+
+				if event-item is sunflower named "&6&l値段の変更":
+					set {item.create.gold::%player's uuid%} to slot 4 of player's current inventory
+					close player's inventory
+					send "&6&l設定する値段を入力してください"
+
+				if event-item is nether star named "&6&lレアリティの設定":
+					set {_i} to slot 4 of player's current inventory
+					set {_parameters} to tag "Parameters" of nbt of {_i}
+					open chest with 2 rows named "&6&lレアリティの設定" for player
+					loop 9 times:
+						set slot {_c} of player's current inventory to black stained glass pane named "&cアイテムタイプを設定してください"
+						add 1 to {_c}
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 4 of player's current inventory to refreshitem({_i})
+					if tag "Rarity" of {_parameters} is "コモン":
+						set slot 9 of player's current inventory to light green dye named "&a&lコモン" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "コモン":
+						set slot 9 of player's current inventory to gray dye named "&7コモン" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "アンコモン":
+						set slot 10 of player's current inventory to light green dye named "&a&lアンコモン" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "アンコモン":
+						set slot 10 of player's current inventory to gray dye named "&7アンコモン" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "レア":
+						set slot 11 of player's current inventory to light green dye named "&a&lレア" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "レア":
+						set slot 11 of player's current inventory to gray dye named "&7レア" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "エピック":
+						set slot 12 of player's current inventory to light green dye named "&a&lエピック" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "エピック":
+						set slot 12 of player's current inventory to gray dye named "&7エピック" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "レジェンダリー":
+						set slot 13 of player's current inventory to light green dye named "&a&lレジェンダリー" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "レジェンダリー":
+						set slot 13 of player's current inventory to gray dye named "&7レジェンダリー" with lore "&eクリックして登録"
+
+				if event-item is clock named "&6&lアイテムタイプの変更":
+					set {_i} to slot 4 of player's current inventory
+					set {_parameters} to tag "Parameters" of nbt of {_i}
+					open chest with 3 rows named "&6&lアイテムタイプの変更" for player
+					loop 9 times:
+						set slot {_c} of player's current inventory to black stained glass pane named "&cアイテムタイプを設定してください"
+						add 1 to {_c}
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 4 of player's current inventory to refreshitem({_i})
+					if tag "Type" of {_parameters} is "アイテム":
+						set slot 9 of player's current inventory to light green dye named "&a&lアイテム" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "アイテム":
+						set slot 9 of player's current inventory to gray dye named "&7アイテム" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "防具":
+						set slot 10 of player's current inventory to light green dye named "&a&l防具" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "防具":
+						set slot 10 of player's current inventory to gray dye named "&7防具" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "剣":
+						set slot 11 of player's current inventory to light green dye named "&a&l剣" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "剣":
+						set slot 11 of player's current inventory to gray dye named "&7剣" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "斧":
+						set slot 12 of player's current inventory to light green dye named "&a&l斧" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "斧":
+						set slot 12 of player's current inventory to gray dye named "&7斧" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "杖":
+						set slot 13 of player's current inventory to light green dye named "&a&l杖" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "杖":
+						set slot 13 of player's current inventory to gray dye named "&7杖" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "短剣":
+						set slot 14 of player's current inventory to light green dye named "&a&l短剣" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "短剣":
+						set slot 14 of player's current inventory to gray dye named "&7短剣" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "弓":
+						set slot 15 of player's current inventory to light green dye named "&a&l弓" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "弓":
+						set slot 15 of player's current inventory to gray dye named "&7弓" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "鎌":
+						set slot 16 of player's current inventory to light green dye named "&a&l鎌" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "鎌":
+						set slot 16 of player's current inventory to gray dye named "&7鎌" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "素材":
+						set slot 17 of player's current inventory to light green dye named "&a&l素材" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "素材":
+						set slot 17 of player's current inventory to gray dye named "&7素材" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "アクセサリー":
+						set slot 18 of player's current inventory to light green dye named "&a&lアクセサリー" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "アクセサリー":
+						set slot 18 of player's current inventory to gray dye named "&7アクセサリー" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "強化石":
+						set slot 19 of player's current inventory to light green dye named "&a&l強化石" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "強化石":
+						set slot 19 of player's current inventory to gray dye named "&7強化石" with lore "&eクリックして登録"
+
+				if event-item is oak sign named "&6&l職業制限の変更":
+					set {_i} to slot 4 of player's current inventory
+					set {_c} to 0
+					set {_parameters} to tag "Parameters" of nbt of {_i}
+					set {_s} to size of {save.job.list::*}
+					set {_row} to 2
+					set {_slot} to 11
+					while {_s} >= 8:
+						subtract 9 from {_s}
+						add 1 to {_row}
+					open chest with {_row} rows named "&6&l職業制限の変更" for player
+					loop 9 times:
+						set slot {_c} of player's current inventory to black stained glass pane named "&c職業制限を設定してください"
+						add 1 to {_c}
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 4 of player's current inventory to refreshitem({_i})
+					if tag "Job" of {_parameters} is "なし":
+						set slot 9 of player's current inventory to light green dye named "&a&lなし" with lore "&e他の職業を選択すると解除されます"
+					else:
+						set slot 9 of player's current inventory to gray dye named "&7なし" with lore "&eクリックして登録"
+					if tag "Job" of {_parameters} is "全職業":
+						set slot 10 of player's current inventory to light green dye named "&a&l全職業" with lore "&e他の職業を選択すると解除されます"
+					else:
+						set slot 10 of player's current inventory to gray dye named "&7全職業" with lore "&eクリックして登録"
+					loop {save.job.list::*}:
+						if tag "Job" of {_parameters} contains loop-value:
+							set slot {_slot} of player's current inventory to light green dye named "&a&l%loop-value%" with lore "&eクリックして解除"
+						else:
+							set slot {_slot} of player's current inventory to gray dye named "&7%loop-value%" with lore "&eクリックして登録"
+						add 1 to {_slot}
+
+				if event-item is ender eye named "&6&lスロット制限の変更":
+					set {_i} to slot 4 of player's current inventory
+					set {_parameters} to tag "Parameters" of nbt of {_i}
+					open chest with 2 rows named "&6&lスロット制限の変更" for player
+					loop 9 times:
+						set slot {_c} of player's current inventory to black stained glass pane named "&c職業制限を設定してください"
+						add 1 to {_c}
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 4 of player's current inventory to refreshitem({_i})
+					if tag "Slot" of {_parameters} is "なし":
+						set slot 9 of player's current inventory to light green dye named "&a&lなし" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "なし":
+						set slot 9 of player's current inventory to gray dye named "&7なし" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "メインハンド":
+						set slot 10 of player's current inventory to light green dye named "&a&lメインハンド" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "メインハンド":
+						set slot 10 of player's current inventory to gray dye named "&7メインハンド" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "オフハンド":
+						set slot 11 of player's current inventory to light green dye named "&a&lオフハンド" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "オフハンド":
+						set slot 11 of player's current inventory to gray dye named "&7オフハンド" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "アーマー":
+						set slot 12 of player's current inventory to light green dye named "&a&lアーマー" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "アーマー":
+						set slot 12 of player's current inventory to gray dye named "&7アーマー" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "アクセサリー":
+						set slot 13 of player's current inventory to light green dye named "&a&lアクセサリー" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "アクセサリー":
+						set slot 13 of player's current inventory to gray dye named "&7アクセサリー" with lore "&eクリックして登録"
+
+				if event-item is red dye named "&c&l攻撃力の変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&c&l攻撃力の変更" for player
+
+				if event-item is blue dye named "&9&l防御力の変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&9&l防御力の変更" for player
+
+				if event-item is yellow dye named "&e&l魔力の変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&e&l魔力の変更" for player
+
+				if event-item is light green dye named "&a&l体力の変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&a&l体力の変更" for player
+
+				if event-item is magenta dye named "&d&lMPの変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&d&lMPの変更" for player
+
+				if event-item is green dye named "&2&lDEX値の変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&2&lDEX値の変更" for player
+
+				if event-item is wood sword named "&6&lデフォルト攻撃力の変更":
+					set {_item} to slot 4 of player's current inventory
+					open chest with 1 row named "&6&lデフォルト攻撃力の変更" for player
+
+				if event-item is diamond named "&6&l強化枠の変更":
+					set {_i} to slot 4 of player's current inventory
+					open chest with 1 row named "&6&l強化枠の変更" for player
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 3 of player's current inventory to redstone named "&c-1"
+					set slot 4 of player's current inventory to {_i}
+					set slot 5 of player's current inventory to emerald named "&a+1"
+
+				if {_item} is set:
+					set slot 0 of player's current inventory to book named "&6&l戻る"
+					set slot 2 of player's current inventory to redstone block named "&c-10"
+					set slot 3 of player's current inventory to redstone named "&c-1"
+					set slot 4 of player's current inventory to {_item}
+					set slot 5 of player's current inventory to emerald named "&a+1"
+					set slot 6 of player's current inventory to emerald block named "&a+10"
+				stop
+
+			if name of player's current inventory is "&6&l強化枠の変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "Stone" of {_parameters}
+					set {_number} to {_number} - 1
+					if {_number} >= 0:
+						set tag "Stone" of {_parameters} to {_number}
+						set {_t} to true
+					else:
+						send "&cこれ以上少なくすることはできません"
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "Stone" of {_parameters}
+					set {_number} to {_number} + 1
+					if {_number} <= 7:
+						set tag "Stone" of {_parameters} to {_number}
+						set {_t} to true
+					else:
+						send "&cこれ以上多くすることはできません"
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					add "{Stones:0}" to nbt of slot 4 of player's current inventory
+					set {_c} to 1
+					set {_l} to tag "Stone" of {_parameters}
+					loop {_l} times:
+						add "Stone%{_c}%:0" to {_stones::*}
+						add 1 to {_c}
+					set {_stones} to join {_stones::*} using ","
+					add "{Stones:{%{_stones}%}}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&l要求レベルの変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "Level" of {_parameters}
+					if {_number} is not -1:
+						set {_number} to {_number} - 1
+						if {_number} >= 0:
+							set tag "Level" of {_parameters} to {_number}
+							set {_t} to true
+						else:
+							send "&cこれ以上低くすることはできません"
+					else:
+						send "&cこれ以上低くすることはできません"
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "Level" of {_parameters}
+					if {_number} is not -1:
+						set {_number} to {_number} + 1
+						set tag "Level" of {_parameters} to {_number}
+					if {_number} is -1:
+						set tag "Level" of {_parameters} to 0
+					set {_t} to true
+				if event-item is cauldron named "&6要求レベルをなくす":
+					set tag "Level" of {_parameters} to -1
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&l攻撃速度の変更":
+				cancel event
+				if event-item is not air:
+					if event-item is book named "&6&l戻る":
+						set {_item} to slot 4 of player's current inventory
+						openparamui(player,{_item})
+					set {_attribute::*} to tag "AttributeModifiers" of nbt of slot 4 of player's current inventory
+					loop {_attribute::*}:
+						if tag "Name" of loop-value is "generic.attack_speed":
+							if event-item is emerald block named "&a+0.1":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} + 0.1
+								set tag "Amount" of loop-value to {_number}
+								set {_t} to true
+							if event-item is emerald named "&a+0.01":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} + 0.01
+								set tag "Amount" of loop-value to {_number}
+								set {_t} to true
+							if event-item is redstone block named "&c-0.1":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} - 0.1
+								if {_number} >= -4:
+									set tag "Amount" of loop-value to {_number}
+									set {_t} to true
+								else:
+									send "&cこれ以上遅くすることはできません"
+							if event-item is redstone named "&c-0.01":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} - 0.01
+								if {_number} >= -4:
+									set tag "Amount" of loop-value to {_number}
+									set {_t} to true
+								else:
+									send "&cこれ以上遅くすることはできません"
+							if event-item is cauldron named "&6攻撃速度を最速にする":
+								set tag "Amount" of loop-value to 0
+								set {_t} to true
+					if {_t} is set:
+						loop {_attribute::*}:
+							set {_attribute::%loop-index%} to "%loop-value%"
+						set {_tag} to "{AttributeModifiers:[%join {_attribute::*} with "",""%]}"	
+						add "%{_tag}%" to nbt of slot 4 of player's current inventory
+						set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&lレアリティの設定":
+				cancel event
+				set {_i} to slot 4 of player's current inventory
+				set {_parameters} to tag "Parameters" of nbt of {_i}
+				if event-item is book named "&6&l戻る":
+					openparamui(player,{_i})
+				if event-item is gray dye:
+					set {_type} to event-item's name
+					replace "&7" with "" in {_type}
+					set tag "Rarity" of {_parameters} to {_type}
+					if tag "Rarity" of {_parameters} is "コモン":
+						set slot 9 of player's current inventory to light green dye named "&a&lコモン" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "コモン":
+						set slot 9 of player's current inventory to gray dye named "&7コモン" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "アンコモン":
+						set slot 10 of player's current inventory to light green dye named "&a&lアンコモン" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "アンコモン":
+						set slot 10 of player's current inventory to gray dye named "&7アンコモン" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "レア":
+						set slot 11 of player's current inventory to light green dye named "&a&lレア" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "レア":
+						set slot 11 of player's current inventory to gray dye named "&7レア" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "エピック":
+						set slot 12 of player's current inventory to light green dye named "&a&lエピック" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "エピック":
+						set slot 12 of player's current inventory to gray dye named "&7エピック" with lore "&eクリックして登録"
+					if tag "Rarity" of {_parameters} is "レジェンダリー":
+						set slot 13 of player's current inventory to light green dye named "&a&lレジェンダリー" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Rarity" of {_parameters} is not "レジェンダリー":
+						set slot 13 of player's current inventory to gray dye named "&7レジェンダリー" with lore "&eクリックして登録"
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&lアイテムタイプの変更":
+				cancel event
+				set {_i} to slot 4 of player's current inventory
+				set {_parameters} to tag "Parameters" of nbt of {_i}
+				if event-item is book named "&6&l戻る":
+					openparamui(player,{_i})
+				if event-item is gray dye:
+					set {_type} to event-item's name
+					replace "&7" with "" in {_type}
+					set tag "Type" of {_parameters} to {_type}
+					if tag "Type" of {_parameters} is "アイテム":
+						set slot 9 of player's current inventory to light green dye named "&a&lアイテム" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "アイテム":
+						set slot 9 of player's current inventory to gray dye named "&7アイテム" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "防具":
+						set slot 10 of player's current inventory to light green dye named "&a&l防具" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "防具":
+						set slot 10 of player's current inventory to gray dye named "&7防具" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "剣":
+						set slot 11 of player's current inventory to light green dye named "&a&l剣" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "剣":
+						set slot 11 of player's current inventory to gray dye named "&7剣" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "斧":
+						set slot 12 of player's current inventory to light green dye named "&a&l斧" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "斧":
+						set slot 12 of player's current inventory to gray dye named "&7斧" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "杖":
+						set slot 13 of player's current inventory to light green dye named "&a&l杖" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "杖":
+						set slot 13 of player's current inventory to gray dye named "&7杖" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "短剣":
+						set slot 14 of player's current inventory to light green dye named "&a&l短剣" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "短剣":
+						set slot 14 of player's current inventory to gray dye named "&7短剣" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "弓":
+						set slot 15 of player's current inventory to light green dye named "&a&l弓" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "弓":
+						set slot 15 of player's current inventory to gray dye named "&7弓" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "鎌":
+						set slot 16 of player's current inventory to light green dye named "&a&l鎌" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "鎌":
+						set slot 16 of player's current inventory to gray dye named "&7鎌" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "素材":
+						set slot 17 of player's current inventory to light green dye named "&a&l素材" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "素材":
+						set slot 17 of player's current inventory to gray dye named "&7素材" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "アクセサリー":
+						set slot 18 of player's current inventory to light green dye named "&a&lアクセサリー" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "アクセサリー":
+						set slot 18 of player's current inventory to gray dye named "&7アクセサリー" with lore "&eクリックして登録"
+					if tag "Type" of {_parameters} is "強化石":
+						set slot 19 of player's current inventory to light green dye named "&a&l強化石" with lore "&e他のタイプを選択すると解除されます"
+					if tag "Type" of {_parameters} is not "強化石":
+						set slot 19 of player's current inventory to gray dye named "&7強化石" with lore "&eクリックして登録"
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&lスロット制限の変更":
+				cancel event
+				set {_i} to slot 4 of player's current inventory
+				set {_parameters} to tag "Parameters" of nbt of {_i}
+				if event-item is book named "&6&l戻る":
+					openparamui(player,{_i})
+				if event-item is gray dye:
+					set {_slot} to event-item's name
+					replace "&7" with "" in {_slot}
+					set tag "Slot" of {_parameters} to "%{_Slot}%"
+					if tag "Slot" of {_parameters} is "なし":
+						set slot 9 of player's current inventory to light green dye named "&a&lなし" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "なし":
+						set slot 9 of player's current inventory to gray dye named "&7なし" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "メインハンド":
+						set slot 10 of player's current inventory to light green dye named "&a&lメインハンド" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "メインハンド":
+						set slot 10 of player's current inventory to gray dye named "&7メインハンド" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "オフハンド":
+						set slot 11 of player's current inventory to light green dye named "&a&lオフハンド" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "オフハンド":
+						set slot 11 of player's current inventory to gray dye named "&7オフハンド" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "アーマー":
+						set slot 12 of player's current inventory to light green dye named "&a&lアーマー" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "アーマー":
+						set slot 12 of player's current inventory to gray dye named "&7アーマー" with lore "&eクリックして登録"
+					if tag "Slot" of {_parameters} is "アクセサリー":
+						set slot 13 of player's current inventory to light green dye named "&a&lアクセサリー" with lore "&e他のスロットを選択すると解除されます"
+					if tag "Slot" of {_parameters} is not "アクセサリー":
+						set slot 13 of player's current inventory to gray dye named "&7アクセサリー" with lore "&eクリックして登録"
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&l職業制限の変更":
+				cancel event
+				set {_i} to slot 4 of player's current inventory
+				set {_parameters} to tag "Parameters" of nbt of {_i}
+				if event-item is book named "&6&l戻る":
+					openparamui(player,{_i})
+				if event-item's name is "&7全職業":
+					set tag "Job" of {_parameters} to "全職業"
+					set {_t} to true
+				if event-item's name is "&7なし":
+					set tag "Job" of {_parameters} to "なし"
+					set {_t} to true
+				if event-item is gray dye:
+					if event-item's name is not "&7全職業":
+						if event-item's name is not "&7なし":
+							set {_job} to event-item's name
+							replace "&7" with "" in {_job}
+							if tag "Job" of {_parameters} is "なし":
+								set tag "Job" of {_parameters} to "%{_job}%"
+								set {_st} to true
+							if tag "Job" of {_parameters} is "全職業":
+								set tag "Job" of {_parameters} to "%{_job}%"
+								set {_st} to true 
+							else:
+								if {_st} is not set:
+									set {_nowjob} to tag "Job" of {_parameters}
+									set tag "Job" of {_parameters} to "%{_nowjob}% %{_job}%"
+							set {_t} to true
+				if event-item is light green dye:
+					if event-item's name is not "&a&l全職業":
+						if event-item's name is not "&a&lなし":
+							set {_job} to event-item's name
+							replace "&a&l" with "" in {_job}
+							set {_jobs} to "なし"
+							set {_nowjob} to tag "Job" of {_parameters}
+							set {_nowjob::*} to {_nowjob} split at " "
+							set {_c} to 1
+							loop {_nowjob::*}:
+								if loop-value is {_job}:
+									delete {_nowjob::%loop-index%}
+							loop {_nowjob::*}:
+								if {_c} is 1:
+									set {_jobs} to loop-value
+								else:
+									set {_jobs} to "%{_jobs}% %loop-value%"
+								add 1 to {_c}
+							set tag "Job" of {_parameters} to "%{_jobs}%"
+							set {_t} to true
+				if {_t} is set:
+					set {_slot} to 11
+					if tag "Job" of {_parameters} is "なし":
+						set slot 9 of player's current inventory to light green dye named "&a&lなし" with lore "&e他の職業を選択すると解除されます"
+					else:
+						set slot 9 of player's current inventory to gray dye named "&7なし" with lore "&eクリックして登録"
+					if tag "Job" of {_parameters} is "全職業":
+						set slot 10 of player's current inventory to light green dye named "&a&l全職業" with lore "&e他の職業を選択すると解除されます"
+					else:
+						set slot 10 of player's current inventory to gray dye named "&7全職業" with lore "&eクリックして登録"
+					loop {save.job.list::*}:
+						if tag "Job" of {_parameters} contains loop-value:
+							set slot {_slot} of player's current inventory to light green dye named "&a&l%loop-value%" with lore "&eクリックして解除"
+						else:
+							set slot {_slot} of player's current inventory to gray dye named "&7%loop-value%" with lore "&eクリックして登録"
+						add 1 to {_slot}
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&6&lデフォルト攻撃力の変更":
+				cancel event
+				if event-item is not air:
+					if event-item is book named "&6&l戻る":
+						set {_item} to slot 4 of player's current inventory
+						openparamui(player,{_item})
+					set {_attribute::*} to tag "AttributeModifiers" of nbt of slot 4 of player's current inventory
+					loop {_attribute::*}:
+						if tag "Name" of loop-value is "generic.attack_damage":
+							if event-item is emerald block named "&a+10":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} + 10
+								set tag "Amount" of loop-value to {_number}
+								set {_t} to true
+							if event-item is emerald named "&a+1":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} + 1
+								set tag "Amount" of loop-value to {_number}
+								set {_t} to true
+							if event-item is redstone block named "&c-10":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} - 10
+								if {_number} >= 0:
+									set tag "Amount" of loop-value to {_number}
+									set {_t} to true
+								else:
+									send "&cこれ以上低くすることはできません"
+							if event-item is redstone named "&c-1":
+								set {_number} to tag "Amount" of loop-value
+								set {_number} to {_number} - 1
+								if {_number} >= 0:
+									set tag "Amount" of loop-value to {_number}
+									set {_t} to true
+								else:
+									send "&cこれ以上低くすることはできません"
+					if {_t} is set:
+						loop {_attribute::*}:
+							set {_attribute::%loop-index%} to "%loop-value%"
+						set {_tag} to "{AttributeModifiers:[%join {_attribute::*} with "",""%]}"	
+						add "%{_tag}%" to nbt of slot 4 of player's current inventory
+						set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&c&l攻撃力の変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "Damage" of {_parameters}
+					set {_number} to {_number} - 1
+					set tag "Damage" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "Damage" of {_parameters}
+					set {_number} to {_number} + 1
+					set tag "Damage" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald block named "&a+10":
+					set {_number} to tag "Damage" of {_parameters}
+					set {_number} to {_number} + 10
+					set tag "Damage" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is redstone block named "&c-10":
+					set {_number} to tag "Damage" of {_parameters}
+					set {_number} to {_number} - 10
+					set tag "Damage" of {_parameters} to {_number}
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&9&l防御力の変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "Protection" of {_parameters}
+					set {_number} to {_number} - 1
+					set tag "Protection" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "Protection" of {_parameters}
+					set {_number} to {_number} + 1
+					set tag "Protection" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald block named "&a+10":
+					set {_number} to tag "Protection" of {_parameters}
+					set {_number} to {_number} + 10
+					set tag "Protection" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is redstone block named "&c-10":
+					set {_number} to tag "Protection" of {_parameters}
+					set {_number} to {_number} - 10
+					set tag "Protection" of {_parameters} to {_number}
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&e&l魔力の変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "MagicDamage" of {_parameters}
+					set {_number} to {_number} - 1
+					set tag "MagicDamage" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "MagicDamage" of {_parameters}
+					set {_number} to {_number} + 1
+					set tag "MagicDamage" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald block named "&a+10":
+					set {_number} to tag "MagicDamage" of {_parameters}
+					set {_number} to {_number} + 10
+					set tag "MagicDamage" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is redstone block named "&c-10":
+					set {_number} to tag "MagicDamage" of {_parameters}
+					set {_number} to {_number} - 10
+					set tag "MagicDamage" of {_parameters} to {_number}
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&a&l体力の変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "Health" of {_parameters}
+					set {_number} to {_number} - 1
+					set tag "Health" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "Health" of {_parameters}
+					set {_number} to {_number} + 1
+					set tag "Health" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald block named "&a+10":
+					set {_number} to tag "Health" of {_parameters}
+					set {_number} to {_number} + 10
+					set tag "Health" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is redstone block named "&c-10":
+					set {_number} to tag "Health" of {_parameters}
+					set {_number} to {_number} - 10
+					set tag "Health" of {_parameters} to {_number}
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&d&lMPの変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "MP" of {_parameters}
+					set {_number} to {_number} - 1
+					set tag "MP" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "MP" of {_parameters}
+					set {_number} to {_number} + 1
+					set tag "MP" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald block named "&a+10":
+					set {_number} to tag "MP" of {_parameters}
+					set {_number} to {_number} + 10
+					set tag "MP" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is redstone block named "&c-10":
+					set {_number} to tag "MP" of {_parameters}
+					set {_number} to {_number} - 10
+					set tag "MP" of {_parameters} to {_number}
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory is "&2&lDEX値の変更":
+				cancel event
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				if event-item is book named "&6&l戻る":
+					set {_item} to slot 4 of player's current inventory
+					openparamui(player,{_item})
+				if event-item is redstone named "&c-1":
+					set {_number} to tag "DEX" of {_parameters}
+					set {_number} to {_number} - 1
+					set tag "DEX" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald named "&a+1":
+					set {_number} to tag "DEX" of {_parameters}
+					set {_number} to {_number} + 1
+					set tag "DEX" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is emerald block named "&a+10":
+					set {_number} to tag "DEX" of {_parameters}
+					set {_number} to {_number} + 10
+					set tag "DEX" of {_parameters} to {_number}
+					set {_t} to true
+				if event-item is redstone block named "&c-10":
+					set {_number} to tag "DEX" of {_parameters}
+					set {_number} to {_number} - 10
+					set tag "DEX" of {_parameters} to {_number}
+					set {_t} to true
+				if {_t} is set:
+					add "{Parameters:%{_parameters}%}" to nbt of slot 4 of player's current inventory
+					set slot 4 of player's current inventory to refreshitem(slot 4 of player's current inventory)
+				stop
+
+			if name of player's current inventory contains "&a&lアイテムリスト":
+				if click action is not clone stack:
+					cancel event
+				if clicked item is red wool named "&a前のページへ":
+					set {_name} to name of player's current inventory
+					replace "&a&lアイテムリスト &7Page:" with "" in {_name}
+					set {_name} to {_name} parsed as number
+					subtract 1 from {_name}
+					if {_name} >= 1:
+						openitemlist(player,{_name})
+				if clicked item is light green wool named "&a次のページへ":
+					set {_name} to name of player's current inventory
+					replace "&a&lアイテムリスト &7Page:" with "" in {_name}
+					set {_name} to {_name} parsed as number
+					add 1 to {_name}
+					openitemlist(player,{_name})
+on inventory close:
+	if event-inventory's name is "&c&l攻撃力の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&9&l防御力の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&e&l魔力の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&a&l体力の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&d&lMPの変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&2&lDEX値の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&l職業制限の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&lスロット制限の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&lアイテムタイプの変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&l攻撃速度の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&l要求レベルの変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&lデフォルト攻撃力の変更":
+		set {_item} to slot 4 of event-inventory
+	if event-inventory's name is "&6&l強化石枠の変更":
+		set {_item} to slot 4 of event-inventory
+	if {_item} is set:
+		wait a tick
+		openparamui(player,{_item})
+
+on chat:
+	if {item.create.cache::%player's uuid%} is set:
+		cancel event
+		replace "&" with "§" in message
+		send "&6&lアイテム名が&f「&r %message% &f」&6&lに設定されました"
+		set {item.create.cache::%player's uuid%}'s display name to message
+		openparamui(player,{item.create.cache::%player's uuid%})
+		delete {item.create.cache::%player's uuid%}
+	if {item.create.info::%player's uuid%} is set:
+		cancel event
+		replace "&" with "§" in message
+		set {_info::*} to message split at "//"
+		if amount of {_info::*} <= 4:
+			set {_parameters} to tag "Parameters" of nbt of {item.create.info::%player's uuid%}
+			set tag "Info" of {_parameters} to message
+			add "{Parameters:%{_parameters}%}" to nbt of {item.create.info::%player's uuid%}
+			send "&6&lアイテムの説明文が..."
+			loop {_info::*}:
+				send loop-value
+			send "&6&lに設定されました"
+			openparamui(player,{item.create.info::%player's uuid%})
+			delete {item.create.info::%player's uuid%}
+		else:
+			send "&c4行以内にしてください"
+	if {item.create.gold::%player's uuid%} is set:
+		cancel event
+		set {_n} to message parsed as number
+		if {_n} >= 0:
+			set {_parameters} to tag "Parameters" of nbt of {item.create.gold::%player's uuid%}
+			set tag "Gold" of {_parameters} to {_n}
+			add "{Parameters:%{_parameters}%}" to nbt of {item.create.gold::%player's uuid%}
+			send "&6&lアイテムの値段が&f「 %{_n}% Gold &f」&6&lに設定されました"
+			openparamui(player,{item.create.gold::%player's uuid%})
+			delete {item.create.gold::%player's uuid%}
+		else:
+			send "&c&l有効な数字を入力してください"
+command /item [<text>] [<number>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "create":
+				open chest with 1 row named "&a&lアイテム作成" for player
+				set {_c} to 0
+				loop 9 times:
+					set slot {_c} of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+					add 1 to {_c}
+				set slot 4 of player's current inventory to air
+			if arg-1 is "list":
+				if arg-2 is set:
+					openitemlist(player,arg-2)
+				else:
+					openitemlist(player,1)
+			if arg-1 is "update":
+				open chest with 1 row named "&a&lアイテム調整" for player
+				set {_c} to 0
+				loop 9 times:
+					set slot {_c} of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+					add 1 to {_c}
+				set slot 4 of player's current inventory to air
+			if arg-1 is "get":
+				give player {item.save.list::%arg-2%}
+				send "&f「 &r%{item.save.list::%arg-2%}'s display name% &f」 &a&lを与えました"
+			if arg-1 is "delete":
+				send "&f「 &r%{item.save.list::%arg-2%}'s display name% &f」 &c&l&削除しました"
+				delete {item.save.list::%arg-2%}
+command /sethead:
+	trigger:
+		set player's helmet to player's tool
+command /kantei:
+	trigger:
+		set {_parameters} to tag "Parameters" of nbt of player's tool
+		set {_g} to tag "Gold" of {_parameters}
+		send "&aこのアイテムの価値は&f%{_g}%Gold&aです"

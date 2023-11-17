@@ -1,0 +1,46 @@
+options:
+	skill_name: "突風"
+	skill_type: "旅人"
+	mp: 8
+	cool_time: 8 seconds
+
+on load:
+	registerSkill({@skill_name},{@skill_type})
+
+function ForceToppu(p: player, type: text):
+	set {_uuid} to uuid of {_p}
+	if {player.%{_type}%.skill::%{_uuid}%} is {@skill_name}:
+		if difference between {player.%{_type}%.cooldown::%{_uuid}%} and now >= {@cool_time}:
+			if {@skill_type} contains {player.job::%{_uuid}%}:
+				if {player.nowmp::%{_uuid}%} >= {@mp}:
+					subtract {@mp} from {player.nowmp::%{_uuid}%}
+					set {player.%{_type}%.cooldown::%{_uuid}%} to now
+					set {_vector} to vector from yaw {_p}'s yaw and pitch {_p}'s pitch
+					set x of {_vector} to x of {_vector} * 1.4
+					set z of {_vector} to z of {_vector} * 1.4
+					set {_p}'s velocity to {_vector}
+					apply SPEED 2 without any particles to {_p} for 5 seconds
+					apply FAST DIGGING 1 without any particles to {_p} for 5 seconds
+					playsound("ENTITY_ENDER_DRAGON_FLAP",location of {_p},1.5,1)
+					playsound("ENTITY_FIREWORK_ROCKET_LAUNCH",location of {_p},1.3,0.8)
+					particle(7,"CLOUD",0,1,0,0.1,location of {_p})
+				else:
+					send "&c&lMPが足りません..." to {_p}
+			else:
+				send "&c&l現在の職業ではこのスキルを使用できません" to {_p}
+		else:
+			set {_d} to difference between {player.%{_type}%.cooldown::%{_uuid}%} and now
+			set {player.skill.cooldown::%{_uuid}%} to 10
+			play "BLOCK_NOTE_BLOCK_BASS" to {_p} at volume 2
+
+on offhand switch:
+	ForceToppu(player,"mobile")
+
+on right click:
+	if player is sneaking:
+		ForceToppu(player,"common1")
+on drop:
+	if player is sneaking:
+		ForceToppu(player,"common2")
+	else:
+		ForceToppu(player,"common3")

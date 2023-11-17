@@ -1,0 +1,330 @@
+#=========================================================================================================関数
+
+function trading(p1: player, p2: player):
+	loop 2 times:
+		tradingGUIopen({_p1}, {_p2})
+		set {_p} to {_p1}
+		set {_p1} to {_p2}
+		set {_p2} to {_p}
+
+function tradingGUIopen(p1: player, p2: player):
+	open chest with 6 row named "Trading with %{_p2}%" to {_p1}
+	
+	#スロットすべてにガラス設置
+	set {_n} to 54
+	loop {_n} times:
+		remove 1 from {_n}
+		set slot {_n} of current inventory of {_p1} to lime stained glass pane
+	
+	#ガラス以外のもの設置
+	set slot 2 of current inventory of {_p1} to skull of {_p1}
+	set slot 4 of current inventory of {_p1} to barrier
+	set slot 6 of current inventory of {_p1} to skull of {_p2}
+	set slot 38 of current inventory of {_p1} to gray wool named "&a準備を完了する"
+	set slot 42 of current inventory of {_p1} to gray wool named "&7準備未完了"
+	set {_n} to 4
+	
+	#スロット10,11,12,19,20,21,28,29,30 14,15,16,23,24,25,32,33,34のair/保存されたアイテム化
+	set {_slot} to 0
+	set {_uuid} to uuid of {_p1}
+	loop 3 times:
+		add 6 to {_n}
+		loop 3 times:
+			add 1 to {_slot}
+			if {slot%{_slot}%.%{_uuid}%} is set:
+				set {_item} to {slot%{_slot}%.%{_uuid}%}
+			else:
+				set {_item} to air
+			set slot {_n} of current inventory of {_p1} to {_item}
+			add 4 to {_n}
+			set slot {_n} of current inventory of {_p1} to air
+			remove 3 from {_n}
+
+function closingTrade(p: player):
+	if metadata value "tradeSent" of {_p} is set:
+		open chest with 1 row named "Closing Trade" to {_p}
+		set slot 3 of {_p}'s current inventory to red wool named "&c取引を中止する"
+		set slot 5 of {_p}'s current inventory to green wool named "&7取引に戻る"
+
+function giveTradingitem(p: player):
+	set {_n} to 1
+	set {_uuid} to uuid of {_p}
+	loop 9 times:
+		give {slot%{_n}%.%{_uuid}%} to {_p}
+		broadcast "%{slot%{_n}%.%{_uuid}%}%"
+		delete {slot%{_n}%.%{_uuid}%}
+		add 1 to {_n}
+
+function resetTradingMetadata(p: player):
+	delete metadata value "tradeTime" of {_p}
+	delete metadata value "tradeSent" of {_p}
+
+function isItemSame(p: player, i: item, slot: number) :: boolean:
+	{_i} is not air
+	set {_am} to item amount of slot {_slot} of {_p}'s current inventory
+	set item amount of slot {_slot} of {_p}'s current inventory to item amount of {_i}
+	if {_i} is slot {_slot} of {_p}'s current inventory:
+		set {_tf} to true
+	else:
+		set {_tf} to false
+	set item amount of slot {_slot} of {_p}'s current inventory to {_am}
+	return {_tf}
+
+function returnSlotIndex(slot: number) :: number:
+	if {_slot} is 10:
+		set {_n} to 1
+	else if {_slot} is 11:
+		set {_n} to 2
+	else if {_slot} is 12:
+		set {_n} to 3
+	else if {_slot} is 19:
+		set {_n} to 4
+	else if {_slot} is 20:
+		set {_n} to 5
+	else if {_slot} is 21:
+		set {_n} to 6
+	else if {_slot} is 28:
+		set {_n} to 7
+	else if {_slot} is 29:
+		set {_n} to 8
+	else if {_slot} is 30:
+		set {_n} to 9
+	if {_slot} is 1:
+		set {_n} to 10
+	else if {_slot} is 2:
+		set {_n} to 11
+	else if {_slot} is 3:
+		set {_n} to 12
+	else if {_slot} is 4:
+		set {_n} to 19
+	else if {_slot} is 5:
+		set {_n} to 20
+	else if {_slot} is 6:
+		set {_n} to 21
+	else if {_slot} is 7:
+		set {_n} to 28
+	else if {_slot} is 8:
+		set {_n} to 29
+	else if {_slot} is 9:
+		set {_n} to 30
+	return {_n}
+
+function applyTradeItems(p: player, cslot: object, am: number) :: number:
+	set {_n} to 1
+	set {_uuid} to uuid of {_p}
+	
+	set {_slot} to returnSlotIndex({_n})
+	
+	loop 9 times:
+		set {_slot} to returnSlotIndex({_n})
+		if slot {_slot} of {_p}'s current inventory is air:
+			
+			if item amount of {_cslot} < {_am}:
+				set {_am} to item amount of {_cslot}
+			
+			set slot {_slot} of {_p}'s current inventory to {_cslot}
+			set item amount of slot {_slot} of {_p}'s current inventory to {_am}
+			
+			set {_ret} to {_am}
+			exit 1 loop
+		else:
+			if isItemSame({_p}, {_cslot}, {_slot}) is true:
+				item amount of slot {_slot} of {_p}'s current inventory < max stack size of slot {_slot} of {_p}'s current inventory
+				if item amount of {_cslot} < {_am}:
+					set {_am} to item amount of {_cslot}
+				
+				set {_is64} to item amount of slot {_slot} of {_p}'s current inventory
+				add {_am} to {_is64}
+				
+				if {_is64} > max stack size of {_cslot}:
+					set {_am} to max stack size of {_cslot} - item amount of slot {_slot} of {_p}'s current inventory
+				
+				add {_am} to item amount of slot {_slot} of {_p}'s current inventory
+				
+				set {_ret} to {_am}
+				exit 1 loop
+		add 1 to {_n}
+	if {_ret} is not set:
+		set {_ret} to 0
+	
+	if {_n} is not 9:
+		broadcast "%{_n}%"
+		set {slot%{_n}%.%{_uuid}%} to slot {_slot} of {_p}'s current inventory
+	
+	return {_ret}
+
+#=========================================================================================================作ったコマンド
+
+command /tradereset <player>:
+	permission: skript.admin
+	trigger:
+		resetTradingMetadata(arg)
+		message "reset ok"
+
+command /trading:
+	trigger:
+		set metadata value "tradeSent" of player to player
+		trading(player, player)
+		set slot 42 of player's current inventory to light green wool
+
+command /trade <player>:
+	trigger:
+		if arg is online:
+			if metadata value "tradeSent" of arg is player:
+				trading(player, arg)
+				delete metadata value "tradeTime" of arg
+				set metadata value "tradeSent" of player to arg
+			else if metadata value "tradeSent" of player is a player:
+				set {_m} to metadata value "tradeSent" of player
+				message "%{_m}%"
+				message "&7[&6MineFroniter&7] &c取引の申請は一度に一人までです。"
+			else if metadata value "tradeSent" of arg is a player:
+				message "&7[&6MineFroniter&7] &c相手はすでにほかの人と取引をしています"
+			else:
+				set metadata value "tradeSent" of player to arg
+				set metadata value "tradeTime" of player to 0
+				command "/tellraw %arg% {""text"":""&7[&6MineFrontier&7] &e&l%player%&f&aが取引を申請しています。許可する&8(click)"",""clickEvent"":{""action"":""run_command"",""value"":""/trade %player%""}}"
+				message "&7[&6MineFroniter&7] &a取引の申請を送信しました。" to player
+		else:
+			message "&7[&6MineFroniter&7] &c相手はオンラインではありません。"
+
+#=========================================================================================================常時処理(30秒で取引申請キャンセル)
+
+every 3 second:
+	loop all players:
+		if metadata value "tradeTime" of loop-player < 10:
+			set {_n} to metadata value "tradeTime" of loop-player
+			add 1 to {_n}
+			set metadata value "tradeTime" of loop-player to {_n}
+			if metadata value "tradeTime" of loop-player >= 10:
+				delete metadata value "tradeTime" of loop-player
+				delete metadata value "tradeSent" of loop-player
+				message "&7[&6MineFroniter&7] &c30秒以上応答がないため、取引は拒否されました。" to loop-player
+
+#=========================================================================================================インベントリクリック処理
+
+on inventory click:
+	if name of player's current inventory contains "Trading with":
+		
+		set {_p} to metadata value "tradeSent" of player
+		cancel event
+		
+		if event-inventory is player's inventory:
+			if "%click type%" contains "RIGHT":
+				set {_n} to applyTradeItems(player, event-slot, 16)
+			else if "%click type%" contains "LEFT":
+				set {_n} to applyTradeItems(player, event-slot, 1)
+			remove {_n} from item amount of event-slot
+		
+		if index of event-slot is 4: #バリアブロック 取引停止画面へ
+			event-inventory is not player's inventory
+			close player's inventory
+			closingTrade(player)
+			
+		else if index of event-slot is 38:
+			
+			event-inventory is not player's inventory
+			
+			set {_p} to metadata value "tradeSent" of player parsed as player
+			execute command "/execute at %player% as %player% run playsound minecraft:entity.experience_orb.pickup master @s"
+			
+			if event-item is gray wool: #準備を完了する
+				
+				set slot 38 of player's current inventory to light green wool named "&c準備完了を取り消す"
+				set slot 42 of {_p}'s current inventory to light green wool named "&a準備完了"
+				
+				if slot 42 of player's current inventory is light green wool: #相手の準備が完了なら最終確認にすすむ
+					
+					set slot 38 of player's current inventory to yellow wool named "&a取引を確認する"
+					set slot 42 of player's current inventory to yellow wool named "&e取引確認中"
+					set slot 38 of {_p}'s current inventory to yellow wool named "&a取引を確認する"
+					set slot 42 of {_p}'s current inventory to yellow wool named "&e取引確認中"
+					
+					set slot 49 of player's current inventory to redstone torch named "&f取引の最終確認をしてください。" with lore "&f羊毛をクリックして確認"
+					set slot 49 of {_p}'s current inventory to redstone torch named "&f取引の最終確認をしてください。" with lore "&f羊毛をクリックして確認"
+					
+					execute command "/execute at %player% as %player% run playsound minecraft:block.piston.extend master @s"
+					execute command "/execute at %{_p}% as %{_p}% run /playsound minecraft:block.piston.extend master @s"
+					
+			else if event-item is light green wool: #準備を未完了にする
+				
+				set slot 38 of player's current inventory to gray wool named "&a準備を完了する"
+				set slot 42 of player's current inventory to gray wool named "&7準備未完了"
+				
+			else if event-item is yellow wool: #準備の最終確認をする
+				
+				set slot 38 of player's current inventory to red wool named "&a取引確認済"
+				set slot 42 of {_p}'s current inventory to red wool named "&a取引確認済"
+				
+				if slot 42 of player's current inventory is red wool: #相手も最終確認ができていたら取引を完了する
+					
+					resetTradingMetadata(player)
+					resetTradingMetadata({_p})
+					
+					giveTradingitem(player)
+					giveTradingitem({_p})
+					
+					close {_p}'s inventory
+					close player's inventory
+					
+					message "&7[&6MineFroniter&7] &a取引が完了しました。" to player
+					message "&7[&6MineFroniter&7] &a取引が完了しました。" to {_p}
+	
+	
+	#ClosingTrade画面の処理
+	if name of player's current inventory is "Closing Trade":
+		cancel event
+		if index of event-slot is 3:
+			set {_p} to metadata value "tradeSent" of player
+			
+			resetTradingMetadata(player)
+			resetTradingMetadata({_p})
+			
+			giveTradingitem(player)
+			giveTradingitem({_p})
+			
+			close {_p}'s inventory
+			close player's inventory
+			
+			message "&7[&6MineFroniter&7] &c相手は取引を中止しました。" to {_p}
+			message "&7[&6MineFroniter&7] &c取引を中止しました。" to player
+			
+		else if index of event-slot is 5:
+			set {_p1} to player
+			set {_p2} to metadata value "tradeSent" of player
+			tradingGUIopen({_p1}, {_p2})
+
+#=========================================================================================================取引申請 on right click on player:
+
+on right click on player:
+	player is sneaking
+	#インベントリの空きカウント
+	set {_i} to 0
+	set {_n} to 36
+	loop {_n} times:
+		remove 1 from {_n}
+		if slot {_n} of player's inventory is air:
+			add 1 to {_i}
+	set {_j} to 0
+	set {_n} to 36
+	loop {_n} times:
+		remove 1 from {_n}
+		if slot {_n} of clicked player's inventory is air:
+			add 1 to {_j}
+	#両者の9以上のインベントリの空きの分岐
+	if {_i} < 9:
+		message "&7[&6MineFroniter&7] &cインベントリの枠を9個以上開けてください。" to player
+	else if {_j} < 9:
+		message "&7[&6MineFroniter&7] &c相手のインベントリの枠を9個以上開けてください。" to player
+	else:
+		command "/tellraw %player% {""text"":""&7[&6MineFrontier&7] &e&l%clicked player%&f&aに取引を申請する&8(click)"",""clickEvent"":{""action"":""run_command"",""value"":""/trade %clicked player%""}}"
+
+#=========================================================================================================インベントリ閉じたときの処理
+
+on inventory close:
+	if name of event-inventory is "Closing Trade":
+		closingTrade(player)
+	else if name of event-inventory contains "Trading with":
+		closingTrade(player)
+
+#=========================================================================================================

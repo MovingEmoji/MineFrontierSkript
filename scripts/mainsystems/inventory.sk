@@ -1,0 +1,54 @@
+on load:
+	broadcast "&7[&6*&7] &aSuccessfully registered serialized inventory system."
+on unload:
+	broadcast "&7[&6*&7] &cUnregistered serialized inventory system."
+
+function saveInventory(p: player, inv: inventory) :: strings:
+	set {_uuid} to uuid of {_p}
+	set {_cnt} to inventory size of {_inv} + 1
+	loop {_cnt} times:
+		set {_c} to loop-value - 1
+		set {_parameters} to tag "Parameters" of nbt of slot {_c} of {_inv}
+		set {_stones} to tag "Stones" of nbt of slot {_c} of {_inv}
+		set {_id} to tag "Id" of {_parameters}
+		set {_amount} to item amount of slot {_c} of {_inv}
+		if {_parameters} is set:
+			if {_stones} is set:
+				if {_stones} is not 0:
+					set {_return.inv::%loop-value%} to "%{_id}%//%{_amount}%//%{_stones}%"
+				else:
+					set {_return.inv::%loop-value%} to "%{_id}%//%{_amount}%"
+			else:
+				set {_return.inv::%loop-value%} to "%{_id}%//%{_amount}%"
+		else:
+			set {_return.inv::%loop-value%} to "0//0"
+		delete {_stones} and {_parameters} and {_id} and {_amount}
+	return {_return.inv::*}
+
+on quit:
+	set {_inv} to player's inventory
+	set {_uuid} to uuid of player
+	set {_inv::*} to saveInventory(player, {_inv})
+	if file "../PlayerData/%{_uuid}%/inventory.yml" does not exist:
+		create file "../PlayerData/%{_uuid}%/inventory.yml"
+	set file contents of "../PlayerData/%{_uuid}%/inventory.yml" to {_inv::*}
+	wait a tick
+	delete file "./world/playerdata/%{_uuid}%.dat"
+	delete file "./world/playerdata/%{_uuid}%.dat_old"
+
+on join:
+	set {_uuid} to uuid of player
+	if file "../PlayerData/%{_uuid}%/inventory.yml" exists:
+		set {_inv::*} to file contents of "../PlayerData/%{_uuid}%/inventory.yml"
+		loop {_inv::*}:
+			set {_cnt} to loop-index parsed as number
+			set {_cnt} to {_cnt} - 1
+			set {_itemdata::*} to loop-value split at "//"
+			set {_itemdata::2} to {_itemdata::2} parsed as number
+			if {_itemdata::3} is set:
+				set {_item} to {_itemdata::2} of {item.save.list::%{_itemdata::1}%}
+				add "{Stones:%{_itemdata::3}%}" to nbt of {_item}
+				set slot {_cnt} of player's inventory to refreshitem({_item})
+			else:
+				set slot {_cnt} of player's inventory to {_itemdata::2} of {item.save.list::%{_itemdata::1}%}
+			delete {_item} and {_itemdata::*}

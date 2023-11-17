@@ -1,0 +1,181 @@
+function openupgradeui(p: player, i: item):
+	set {_uuid} to uuid of {_p}
+	set {_parameters} to tag "Parameters" of nbt of {_i}
+	set {_stones} to tag "Stones" of nbt of {_i}
+	set {_l} to tag "Stone" of {_parameters}
+	if {_l} > 0:
+		set {_inv} to chest inventory with 3 rows named "&a&l強化石の設定"
+		open {_inv} for {_p}
+		set {_c} to 0
+		loop 9 times:
+			set slot {_c} of {_inv} to black stained glass pane named "&c強化石を設定してください"
+			set slot {_c}+9 of {_inv} to barrier named "&cこのスロットは使えません"
+			set slot {_c}+18 of {_inv} to black stained glass pane named "&c強化石を設定してください"
+			add 1 to {_c}
+		set slot 9 of {_inv} to black stained glass pane named "&c強化石を設定してください"
+		set slot 17 of {_inv} to black stained glass pane named "&c強化石を設定してください"
+		set {_c} to 1
+		loop {_l} times:
+			if tag "Stone%{_c}%" of {_stones} is 0:
+				set slot {_c}+9 of {_inv} to air
+			else if tag "Stone%{_c}%" of {_stones} is not 0:
+				set {_n} to tag "Stone%{_c}%" of {_stones}
+				set slot {_c}+9 of {_inv} to {item.save.list::%{_n}%}
+			add 1 to {_c}
+		set slot 4 of {_inv} to refreshitem({_i})
+		set slot 22 of {_inv} to flint and steel named "&a&l適用する"
+		set slot 24 of {_inv} to cauldron named "&c&l強化石を除去する" with lore "&7除去された強化石は戻りません"
+		set slot 25 of {_inv} to totem of undying named "&6&l強化石を取り外す" with lore "&7強化石はインベントリに戻ります"
+		while name of {_p}'s current inventory is "&a&l強化石の設定":
+			upgrade({_p})
+			wait 2 tick
+function upgrade(p: player):
+	set {_c} to 10
+	set {_parameters} to tag "Parameters" of nbt of slot 4 of {_p}'s current inventory
+	set {_stones} to tag "Stones" of nbt of slot 4 of {_p}'s current inventory
+	loop 7 times:		
+		set {_sparameters} to tag "Parameters" of nbt of slot {_c} of {_p}'s current inventory
+		if item amount of slot {_c} of {_p}'s current inventory > 1:
+			set {_a} to item amount of slot {_c} of {_p}'s current inventory
+			set {_a} to {_a} - 1
+			set item amount of slot {_c} of {_p}'s current inventory to 1
+			give {_p} {_a} of slot {_c} of {_p}'s current inventory
+		if tag "Type" of {_sparameters} is "強化石":
+			set {_id} to tag "Id" of {_sparameters}
+			set tag "Stone%{_c}-9%" of {_stones} to {_id}
+			add "{Cancel:0}" to nbt of slot {_c} of {_p}'s current inventory
+		else:
+			if slot {_c} of {_p}'s current inventory is not air:
+				if slot {_c} of {_p}'s current inventory is not barrier:
+					send "&cこのアイテムでは強化できません &7(スロット%{_c}-9%&7)" to {_p}
+					give {_p} slot {_c} of {_p}'s current inventory
+					set slot {_c} of {_p}'s current inventory to air
+			else:
+				set tag "Stone%{_c}-9%" of {_stones} to 0
+		add "{Stones:%{_stones}%}" to nbt of slot 4 of {_p}'s current inventory
+		set slot 4 of {_p}'s current inventory to refreshitem(slot 4 of {_p}'s current inventory)
+		delete {_sparameters}
+		delete {_item}
+		add 1 to {_c}
+on right click on anvil:
+	if block 1 below event-block is diamond block:
+		cancel event
+		open chest with 1 rows named "&6&l装備強化台" for player
+		set {_c} to 0
+		loop 9 times:
+			set slot {_c} of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+			add 1 to {_c}
+		set slot 4 of player's current inventory to air
+on inventory click:
+	#broadcast "%clicked action%"
+	if index of event-slot is not -999:
+		if event-inventory is not player's inventory:
+			if name of player's current inventory is "&c&l強化石の除去":
+				cancel event
+				set {_cancel} to tag "Cancel" of nbt of event-item
+				if {_cancel} is 0:
+					set event-slot to air
+					upgrade(player)
+				if event-item is cauldron named "&c&l戻る":
+					set slot 22 of event-inventory to air
+					openupgradeui(player,slot 4 of player's current inventory)
+
+			if name of player's current inventory is "&6&l強化石の取り外し":
+				cancel event
+				set {_cancel} to tag "Cancel" of nbt of event-item
+				if {_cancel} is 0:
+					if player has {item.save.list::27}:
+						set {_parameters} to tag "Parameters" of nbt of event-item
+						set {_id} to tag "Id" of {_parameters}
+						set event-slot to air
+						remove 1 of {item.save.list::27} from player's inventory
+						give player {item.save.list::%{_id}%}
+						upgrade(player)
+					else:
+						send "&c一度取り付けた強化石を取り外すには特殊アイテムが必要です"
+				if event-item is totem of undying named "&c&l戻る":
+					set slot 22 of event-inventory to air
+					openupgradeui(player,slot 4 of player's current inventory)
+			if name of player's current inventory is "&6&l装備強化台":
+				if index of event-slot is not 4:
+					cancel event
+				else:
+					wait 1 tick
+					if slot index of event-slot of player's current inventory is not air:
+						set {_item} to slot index of event-slot of player's current inventory
+						openupgradeui(player,{_item})
+				stop
+			if name of player's current inventory is "&a&l強化石の設定":
+				set {_cancel} to tag "Cancel" of nbt of event-item
+				#broadcast "%{_cancel}%"
+				if {_cancel} is 0:
+					cancel event
+					send "&c一度取り付けた強化石を取り外すには特殊アイテムが必要です"
+					stop
+				if index of event-slot is 10:
+					set {_t} to index of event-slot
+				if index of event-slot is 11:
+					set {_t} to index of event-slot
+				if index of event-slot is 12:
+					set {_t} to index of event-slot
+				if index of event-slot is 13:
+					set {_t} to index of event-slot
+				if index of event-slot is 14:
+					set {_t} to index of event-slot
+				if index of event-slot is 15:
+					set {_t} to index of event-slot
+				if index of event-slot is 16:
+					set {_t} to index of event-slot
+				if {_t} is set:
+					if event-item is barrier:
+						cancel event
+					else:
+						wait a tick
+						upgrade(player)
+						
+				else:
+					cancel event
+					if event-item is flint and steel named "&a&l適用する":
+						upgrade(player)
+						give player slot 4 of player's current inventory
+						set slot 22 of player's current inventory to air
+						close player's inventory
+					if event-item's name is "&c&l強化石を除去する":
+						set {_item} to slot 4 of player's current inventory
+						set slot 22 of player's current inventory to air
+						set name of player's current inventory to "&c&l強化石の除去"
+						set slot 22 of player's current inventory to cauldron named "&c&l戻る"
+						set slot 24 of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+						set slot 25 of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+					if event-item's name is "&6&l強化石を取り外す":
+						set {_item} to slot 4 of player's current inventory
+						set slot 22 of player's current inventory to air
+						set name of player's current inventory to "&6&l強化石の取り外し"
+						set slot 22 of player's current inventory to totem of undying named "&c&l戻る"
+						set slot 24 of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+						set slot 25 of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+		else:
+			if name of player's current inventory is "&6&l装備強化台":
+				if clicked action is instant move:
+					wait a tick
+					set {_item} to slot 4 of player's current inventory
+					openupgradeui(player,{_item})
+					stop
+			if name of player's current inventory is "&c&l強化石の除去":
+				cancel event
+				stop
+			if name of player's current inventory is "&6&l強化石の取り外し":
+				cancel event
+				stop
+on inventory close:
+	if event-inventory's name is "&a&l強化石の設定":
+		if slot 22 of event-inventory is not air:
+			give player slot 4 of event-inventory
+	if event-inventory's name is "&c&l強化石の除去":
+		if slot 22 of event-inventory is not air:
+			set slot 22 of event-inventory to air
+			give player slot 4 of event-inventory
+	if event-inventory's name is "&6&l強化石の取り外し":
+		if slot 22 of event-inventory is not air:
+			set slot 22 of event-inventory to air
+			give player slot 4 of event-inventory

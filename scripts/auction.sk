@@ -1,0 +1,88 @@
+function openauction(p: player, page: number):
+	open chest with 6 rows named "&a&lアイテムオークション" for {_p}
+	set {_slot} to 0
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named " "
+		set slot {_slot} + 45 of {_p}'s current inventory to black stained glass pane named " "
+		add 1 to {_slot}
+	set slot 3 of {_p}'s current inventory to book named "&a&lオークションに出品する"
+	set slot 4 of {_p}'s current inventory to compass named "&a&l入札中のアイテム"
+	set slot 5 of {_p}'s current inventory to name tag named "&a&l検索する"
+	set slot 7 of {_p}'s current inventory to sunflower named "&a&lマイオークション"
+	
+
+function createauction(p: player):
+	open chest with 1 rows named "&a&lオークションに出品する" for {_p}
+	set {_slot} to 0
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named "&cアイテムを設定してください"
+		add 1 to {_slot}
+	set slot 4 of {_p}'s current inventory to air
+
+function editauction(p: player, count: number):
+	open chest with 3 rows named "&a&lオークションの設定を変更 &7ID: %{_count}%" for {_p}
+	set {_slot} to 0
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named " "
+		set slot {_slot} + 9 of {_p}'s current inventory to black stained glass pane named " "
+		set slot {_slot} + 18 of {_p}'s current inventory to black stained glass pane named " "
+		add 1 to {_slot}
+	set slot 11 of {_p}'s current inventory to sunflower named "&6&l値段を変更する" with lore "&a現在の値段: &f[&e%{auction.save.gold::%{_count}%}% ゴールド&f]"
+	set slot 13 of {_p}'s current inventory to {auction.save.item::%{_count}%}
+	set slot 15 of {_p}'s current inventory to oak door named "&b&l保存する"
+command /auction [<text>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "create":
+				create citizen named "&6&lアイテムオークション" at location of player as a player
+				send "&aショップキーパーを作成しました" to player
+			if arg-1 is "test":
+				broadcast "%{auction.save.player::%player's uuid%::*}%"
+on npc right click:
+	set {_id} to event-number
+	if name of citizen {_id} contains "アイテムオークション":
+		openauction(player,1)
+
+on inventory click:
+	if name of player's current inventory contains "&a&lアイテムオークション":
+		cancel event
+		if clicked item is book named "&a&lオークションに出品する":
+			createauction(player)
+	if name of player's current inventory is "&a&lオークションに出品する":
+		cancel event
+		if event-inventory is player's inventory:
+			set slot 4 of player's current inventory to event-slot
+			set {player.auction.slot::%player's uuid%} to index of event-slot
+			set event-slot to air
+			set slot 6 of player's current inventory to light green wool named "&aこのアイテムを出品する"
+		else:
+			if index of event-slot is 4:
+				set slot {player.auction.slot::%player's uuid%} of player's inventory to event-slot
+				set event-slot to air
+				set slot 6 of player's current inventory to black stained glass pane named "&cアイテムを設定してください"
+			if clicked item is light green wool named "&aこのアイテムを出品する":
+				set {_parameters} to tag "Parameters" of nbt of slot 4 of player's current inventory
+				set {_now} to unix of now
+				set {auction.save.item::%{_now}%} to slot 4 of player's current inventory
+				set {auction.save.auther::%{_now}%} to player
+				set {auction.save.gold::%{_now}%} to tag "Gold" of {_parameters}
+				set {auction.save.time::%{_now}%} to 24
+				add {_now} to {auction.save.player::%player's uuid%::*}
+				editauction(player,{_now})
+	if name of player's current inventory contains "&a&lオークションの設定を変更":
+		cancel event
+		if clicked item's name is "&6&l値段を変更する":
+			set {_now} to name of player's current inventory
+			replace "&a&lオークションの設定を変更 &7ID: " with "" in {_now}
+			open sign gui to player with " ", "^^^^^^^^^^^", " 金額を入力 ", and "%{_now}%":
+				set {_gold} to 1st element out of lines
+				set {_now} to 4th element out of lines parsed as number
+				replace " " with "" in {_gold}
+				set {_gold} to {_gold} parsed as number
+				set {auction.save.gold::%{_now}%} to {_gold}
+				editauction(player,{_now})
+		if clicked item is oak door named "&b&l保存する":
+			close player's inventory
+			send "&a&lオークション内容を保存しました。"
+			send "&d&l期限は3日間です。&fアイテムが購入されると即時銀行に振り込まれます。"

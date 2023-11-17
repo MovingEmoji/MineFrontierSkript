@@ -1,0 +1,121 @@
+function ForceSlot(p: player, slot: text, lc: location):
+	set {_uuid} to uuid of {_p}
+	set {_inv::*} to file contents of "../SlotData/%{_slot}%.yml"
+	loop {_inv::*}:
+		set {_cnt} to loop-index parsed as number
+		set {_cnt} to {_cnt} - 1
+		set {_itemdata::*} to loop-value split at "//"
+		set {_itemdata::2} to {_itemdata::2} parsed as number
+		if {_itemdata::3} is set:
+			set {_item} to {_itemdata::2} of {item.save.list::%{_itemdata::1}%}
+			add "{Stones:%{_itemdata::3}%}" to nbt of {_item}
+			set {_item} to refreshitem({_item})
+		else:
+			set {_item} to {_itemdata::2} of {item.save.list::%{_itemdata::1}%}
+		if {_item} is not air:
+			add {_item} to {_slot::*}
+		delete {_item} and {_itemdata::*}
+	set {_resultnum} to random integer between 1 and size of {_slot::*}
+	set {_resultitem} to {_slot::%{_resultnum}%}
+	spawn armor stand at block 2 below {_lc} with nbt "{Invisible:1b,NoBasePlate:1b,NoGravity:1b,Marker:1b,ArmorItems:[{},{},{},{id:""player_head"",Count:1b,tag:{SkullOwner:{Id:[I;1121675190,-1647227906,-1267169239,-1050533352],Properties:{textures:[{Value:""eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTZjYzQ4NmMyYmUxY2I5ZGZjYjJlNTNkZDlhM2U5YTg4M2JmYWRiMjdjYjk1NmYxODk2ZDYwMmI0MDY3In19fQ==""}]}}}}],HandItems:[{},{}]}"
+	set {_e} to last spawned entity
+	set {_pitch} to 0.1
+	set {_pitch2} to 1
+	set {_yaw} to 0
+	set {_c} to 0
+	loop 50 times:
+		set {_lc} to location of {_e}
+		set y coord of {_lc} to y coord of {_lc} + 0.05
+		set yaw of {_lc} to {_yaw}
+		teleport {_e} to {_lc}
+		particle(1,"END_ROD",0.1,0.1,0.1,0.1,location 1 above {_lc})
+		play raw sound "UI_BUTTON_CLICK" at {_lc} with pitch {_pitch} and volume 0.5
+		add 0.05 to {_pitch}
+		add loop-value to {_yaw}
+		if {_c} is 4:
+			set {_c} to 0
+			set {_pitch2} to {_pitch2} - 0.3
+		play raw sound "BLOCK_NOTE_BLOCK_HARP" at {_lc} with pitch {_pitch2} and volume 0.5
+		add 0.1 to {_pitch2}
+		add 1 to {_c}
+		wait 2 tick
+	particle(5,"EXPLOSION_LARGE",0.5,0.5,0.5,0.1,location 2 above {_lc})
+	play raw sound "ENTITY_GENERIC_EXPLODE" at {_lc} with pitch 1 and volume 1
+	set {_holo} to new holo at location 2 above {_lc}
+	add text "&f&l[&r%{_resultitem}'s name%&f&l]" to holo {_holo}
+	add item {_resultitem} to holo {_holo}
+	play raw sound "ENTITY_PLAYER_LEVELUP" at {_lc} with pitch 1 and volume 1
+	give {_p} {_resultitem}
+	kill {_e}
+	wait 3 seconds
+	unregister holo {_holo}
+command /slot [<text>] [<text>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "create":
+				if arg-2 is set:
+					if {save.slot::*} does not contain arg-2:
+						add arg-2 to {save.slot::*}
+						set {save.slot.req::%arg-2%} to {item.save.list::85}
+						send "&a&l新しいスロット「&f&l%arg-2%&a&l」を作成しました"
+					else:
+						send "&c&lこの名前のスロットは既に存在しています"
+			if arg-1 is "setreq":
+				if arg-2 is set:
+					set {save.slot.req::%arg-2%} to player's tool
+					send "&a&l「&f&l%arg-2%&a&l」の必要アイテムを更新しました。"
+				else:
+					send "&c&lスロット名を入力してください"
+			if arg-1 is "edit":
+				if arg-2 is set:
+					if file "../SlotData/%arg-2%.yml" does not exist:
+						create file "../SlotData/%arg-2%.yml"
+					set {_inv} to chest inventory with 3 rows named "&a&lスロット編集 %arg-2%"
+					set {_inv::*} to file contents of "../SlotData/%arg-2%.yml"
+					loop {_inv::*}:
+						set {_cnt} to loop-index parsed as number
+						set {_cnt} to {_cnt} - 1
+						set {_itemdata::*} to loop-value split at "//"
+						set {_itemdata::2} to {_itemdata::2} parsed as number
+						if {_itemdata::3} is set:
+							set {_item} to {_itemdata::2} of {item.save.list::%{_itemdata::1}%}
+							add "{Stones:%{_itemdata::3}%}" to nbt of {_item}
+							set slot {_cnt} of {_inv} to refreshitem({_item})
+						else:
+							set slot {_cnt} of {_inv} to {_itemdata::2} of {item.save.list::%{_itemdata::1}%}
+						delete {_item} and {_itemdata::*}
+					open {_inv} for player
+				else:
+					send "&c&lスロット名を入力してください"
+			if arg-1 is "delete":
+				if arg-2 is set:
+					remove arg-2 from {save.slot::*}
+					delete {save.slot.req::%arg-2%}
+					send "&a&l「&f&l%arg-2%&a&l」を削除しました"
+				else:
+					send "&c&lスロット名を入力してください"
+on inventory close:
+	if event-inventory's name contains "&a&lスロット編集":
+		set {_name} to event-inventory's name
+		replace "&a&lスロット編集 " with "" in {_name}
+		set {_inv::*} to saveInventory(player, event-inventory)
+		set file contents of "../SlotData/%{_name}%.yml" to {_inv::*}
+on right click:
+	if event-block is end portal frame:
+		if block 1 below event-block is diamond block:
+			cancel event
+			if player's tool is {item.save.list::85}:
+				open chest with 6 rows named "&a&lガチャ選択" for player
+				loop {save.slot::*}:
+					set {_cnt} to loop-index parsed as number
+					set {_cnt} to {_cnt} - 1
+					set slot {_cnt} of player's current inventory to emerald block named "&a&l%loop-value%"
+on inventory click:
+	if player's current inventory's name is "&a&lガチャ選択":
+		cancel event
+		if clicked item is not air:
+			set {_name} to clicked item's name
+			replace "&a&l" with "" in {_name}
+			close player's inventory
+			ForceSlot(player,{_name},location of player's targeted block)

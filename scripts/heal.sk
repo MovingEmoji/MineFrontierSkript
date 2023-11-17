@@ -1,0 +1,44 @@
+function RegisterItem(id: number):
+	add {item.save.list::%{_id}%} to {item.healpotion.list::*}
+	if {item.healpotion.list::*} contains {item.save.list::%{_id}%}:
+		broadcast "&7[&6*&7] &aSuccessfully registered item. &f[%{item.save.list::%{_id}%}'s name%&f]"
+	else:
+		broadcast "&7[&6*&7] &cCan't registered item. &f[%{item.save.list::%{_id}%}%&f]"
+
+on load:
+	delete {item.healpotion.list::*}
+	RegisterItem(65)
+	RegisterItem(67)
+
+on right click:
+	if event-item is potion:
+		cancel event
+		if {item.healpotion.list::*} contains event-item:
+			set {_parameters} to tag "Parameters" of nbt of event-item
+			set {_hp} to tag "Health" of {_parameters}
+			set {_n} to rounded down {_hp} / 10
+			set player's walk speed to 0.02
+			set player's fly speed to 0.01
+			set player's tool to air
+			play "ENTITY_GENERIC_DRINK" to player at volume 1
+			wait 0.3 seconds
+			play "ENTITY_GENERIC_DRINK" to player at volume 1
+			wait 0.3 seconds
+			play "ENTITY_GENERIC_DRINK" to player at volume 1
+			wait 0.3 seconds
+			set player's walk speed to 0.2
+			set player's fly speed to 0.1
+			play "BLOCK_BREWING_STAND_BREW" to player at volume 1
+			particle(10,"HEART",0.7,0.5,0.7,0.5,head location of player)
+			apply regeneration 1 to player for 2 seconds
+			loop 10 times:
+				if {player.nowhealth::%player's uuid%} < {player.health::%player's uuid%} + {result.health::%player's uuid%}:
+					if {player.nowhealth::%player's uuid%} + {_n} < {player.health::%player's uuid%} + {result.health::%player's uuid%}:
+						add {_n} to {player.nowhealth::%player's uuid%}
+					else:
+						set {player.nowhealth::%player's uuid%} to {player.health::%player's uuid%} + {result.health::%player's uuid%}
+					particle(1,"HEART",0,0,0,0.5,location 0.1 above head location of player)
+				else:
+					exit loop
+				wait 0.2 seconds
+			remove regeneration from player

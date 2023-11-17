@@ -1,0 +1,30 @@
+on load:
+	broadcast "&7[&6*&7] &aSuccessfully registered sync location system."
+on unload:
+	broadcast "&7[&6*&7] &cUnregistered sync location system."
+
+on quit:
+	set {_uuid} to uuid of player
+	if file "../PlayerData/%{_uuid}%/loglocation.yml" does not exist:
+		create file "../PlayerData/%{_uuid}%/loglocation.yml"
+		write " " at line 1 to file "../PlayerData/%{_uuid}%/loglocation.yml"
+	set line 1 in file "../PlayerData/%{_uuid}%/loglocation.yml" to "%x coord of player%//%y coord of player%//%z coord of player%//%world of player's location%//%player's yaw%//%player's pitch%"
+
+on join:
+	set {_uuid} to uuid of player
+	set {_lc} to line 1 in file "../PlayerData/%{_uuid}%/loglocation.yml"
+	set {_location::*} to {_lc} split at "//"
+	set {_location::1} to {_location::1} parsed as number
+	set {_location::2} to {_location::2} parsed as number
+	set {_location::3} to {_location::3} parsed as number
+	set {_location::4} to world("%{_location::4}%")
+	set {_location::5} to {_location::5} parsed as number
+	set {_location::6} to {_location::6} parsed as number
+	set {_lc} to location of player
+	set x coord of {_lc} to {_location::1}
+	set y coord of {_lc} to {_location::2}
+	set z coord of {_lc} to {_location::3}
+	set world of {_lc} to {_location::4}
+	set yaw of {_lc} to {_location::5}
+	set pitch of {_lc} to {_location::6}
+	teleport player to {_lc}

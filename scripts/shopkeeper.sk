@@ -1,0 +1,538 @@
+function shop(p: player, id: number, page: number):
+	set {_npc} to npc from id {_id}
+	open chest with 6 rows named "&6&l取引所 %{_id}%" for {_p}
+	wait a tick
+	set {_slot} to 0
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named "&1"
+		set slot {_slot}+45 of {_p}'s current inventory to black stained glass pane named "&1"
+		add 1 to {_slot}
+	set slot 4 of {_p}'s current inventory to name tag named npc name of {_npc}
+	set slot 50 of {_p}'s current inventory to light green wool named "&a次のページへ"
+	set slot 49 of {_p}'s current inventory to oak sign named "&6現在のページ: %{_page}%"
+	set slot 48 of {_p}'s current inventory to red wool named "&a前のページへ"
+	set {_start} to 36 * {_page} - 35
+	set {_slot} to 9
+	if file "plugins/Shopkeeper/%{_id}%.yml" exists:
+		set {_contents::*} to file contents of "plugins/Shopkeeper/%{_id}%.yml"
+		loop 36 times:
+			set {_cont::*} to {_contents::%{_start}%} split at "//"
+			set {_amount::*} to {_cont::3} split at "::"
+			set {_cont::4} to {_cont::4} parsed as number
+			set {_amount::2} to {_amount::2} parsed as number
+			set slot {_slot} of {_p}'s current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+			set {_lore::0} to " "
+			if {_cont::1} is not "0::0":
+				set {_t} to true
+			if {_cont::2} is not "0::0":
+				set {_t} to true
+			if {_t} is set:
+				set {_lore::1} to "&6&l【 必要アイテム 】"
+				set {_lore::4} to " "
+				if {_cont::1} is not "0::0":
+					set {_amount::*} to {_cont::1} split at "::"
+					set {_lore::2} to "  &f&l1: &r%{item.save.list::%{_amount::1}%}'s name% &fx%{_amount::2}%"
+				if {_cont::2} is not "0::0":
+					set {_amount::*} to {_cont::2} split at "::"
+					set {_lore::3} to "  &f&l2: &r%{item.save.list::%{_amount::1}%}'s name% &fx%{_amount::2}%"
+			if {_cont::4} is not -1:
+				set {_lore::6} to "&6&l【 販売価格 】"
+				set {_lore::7} to "  &f[&e%{_cont::4}% ゴールド&f]"
+				set {_lore::8} to " "
+				set {_t2} to true 
+			if {_t} and {_t2}  is true:
+				set {_lore::5} to "&fまたは、"
+			set slot {_slot} of {_p}'s current inventory's lore to {_lore::*}
+			add 1 to {_slot}
+			add 1 to {_start}
+			delete {_cont::*} and {_t} and {_t2} and {_amount::*} and {_lore::*}
+function shopselect(p: player, id: number, islot: number):
+	open chest with 1 rows named "&6&l取引選択 %{_id}% %{_islot}%" for {_p}
+	wait a tick
+	set {_slot} to 0
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named "&1"
+		add 1 to {_slot}
+	set {_contents::*} to file contents of "plugins/Shopkeeper/%{_id}%.yml"
+	set {_cont::*} to {_contents::%{_islot}%} split at "//"
+	set {_cont::4} to {_cont::4} parsed as number
+	set {_amount::*} to {_cont::3} split at "::"
+	set {_amount::2} to {_amount::2} parsed as number
+	set slot 4 of {_p}'s current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+	set {_amount::*} to {_cont::1} split at "::"
+	set {_amount::1} to {_amount::1} parsed as number
+	if {_cont::4} is not -1:
+		set slot 6 of {_p}'s current inventory to sunflower named "&6お金で取引する" with lore "&6&l価格: &e%{_cont::4}% ゴールド"
+	else:
+		set slot 6 of {_p}'s current inventory to barrier named "&cお金で取引できません"
+	if {_amount::1} is not 0:
+		set slot 2 of {_p}'s current inventory to book named "&bアイテムで取引する"
+	else:
+		set slot 2 of {_p}'s current inventory to barrier named "&cアイテムで取引できません"
+	set slot 0 of {_p}'s current inventory to bucket named "&aもどる"
+function shopeditor(p: player, npc: entity, id: number, page: number):
+	open chest with 6 rows named "&6&lショップを編集 %{_id}%" for {_p}
+	wait a tick
+	set {_slot} to 0
+	loop 9 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named "&1"
+		set slot {_slot}+45 of {_p}'s current inventory to black stained glass pane named "&1"
+		add 1 to {_slot}
+	set slot 3 of {_p}'s current inventory to name tag named "&aショップ名変更"
+	set slot 4 of {_p}'s current inventory to barrier named "&b職業変更" with lore "&6現在の職業: &f%villager job of {_npc}%"
+	set slot 5 of {_p}'s current inventory to bone named "&4削除"
+	set slot 7 of {_p}'s current inventory to book named "&6取引を作成"
+	set slot 50 of {_p}'s current inventory to light green wool named "&a次のページへ"
+	set slot 49 of {_p}'s current inventory to oak sign named "&6現在のページ: %{_page}%"
+	set slot 48 of {_p}'s current inventory to red wool named "&a前のページへ"
+	set {_start} to 36 * {_page} - 35
+	set {_slot} to 9
+	if file "plugins/Shopkeeper/%{_id}%.yml" exists:
+		set {_contents::*} to file contents of "plugins/Shopkeeper/%{_id}%.yml"
+		loop 36 times:
+			set {_cont::*} to {_contents::%{_start}%} split at "//"
+			set {_amount::*} to {_cont::3} split at "::"
+			set {_amount::2} to {_amount::2} parsed as number
+			set slot {_slot} of {_p}'s current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+			add 1 to {_slot}
+			add 1 to {_start}
+			delete {_cont::*} and {_amount::*}
+function tradecreate(p: player, id: number, coin: number):
+	open chest with 3 rows named "&6&l取引を作成 %{_id}%" for {_p}
+	wait a tick
+	set {_slot} to 0
+	loop 27 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named "&1"
+		add 1 to {_slot}
+	set slot 10 of {_p}'s current inventory to air
+	set slot 11 of {_p}'s current inventory to air
+	set slot 13 of {_p}'s current inventory to air
+	set slot 15 of {_p}'s current inventory to sunflower named "&6価格の設定" with lore "&b現在の価格: &f%{_coin}%"
+	set slot 16 of {_p}'s current inventory to oak door named "&b保存する"
+function tradeedit(p: player, id: number, islot: number):
+	open chest with 3 rows named "&6&l取引を編集 %{_id}% %{_islot}%" for {_p}
+	wait a tick
+	set {_slot} to 0
+	loop 27 times:
+		set slot {_slot} of {_p}'s current inventory to black stained glass pane named "&1"
+		add 1 to {_slot}
+	set slot 10 of {_p}'s current inventory to air
+	set slot 11 of {_p}'s current inventory to air
+	set slot 13 of {_p}'s current inventory to air
+	set slot 15 of {_p}'s current inventory to sunflower named "&6価格の設定" with lore "&b現在の価格: &f0"
+	set slot 16 of {_p}'s current inventory to oak door named "&b保存する"
+	if file "plugins/Shopkeeper/%{_id}%.yml" exists:
+		set {_contents::*} to file contents of "plugins/Shopkeeper/%{_id}%.yml"
+		set {_cont::*} to {_contents::%{_islot}%} split at "//"
+		set {_amount::*} to {_cont::1} split at "::"
+		set {_amount::2} to {_amount::2} parsed as number
+		set slot 10 of {_p}'s current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+		set {_amount::*} to {_cont::2} split at "::"
+		set {_amount::2} to {_amount::2} parsed as number
+		set slot 11 of {_p}'s current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+		set {_amount::*} to {_cont::3} split at "::"
+		set {_amount::2} to {_amount::2} parsed as number
+		set slot 13 of {_p}'s current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+		set slot 15 of {_p}'s current inventory's lore to "&b現在の価格: &f%{_cont::4}%"
+		set slot 26 of {_p}'s current inventory to cauldron named "&c取引を削除"
+on npc right click:
+	set {_id} to event-number
+	set {_npc} to npc from id {_id}
+	if villager job of {_npc} is set:
+		if player is sneaking:
+			if player is op:
+				cancel event
+				shopeditor(player,{_npc},{_id},1)
+		else:
+			cancel event
+			shop(player,{_id},1)
+on inventory click:
+	if name of player's current inventory contains "&6&l取引選択":
+		cancel event
+		if event-inventory is player's current inventory:
+			set {_name} to inventory name of player's current inventory
+			set {_name::*} to {_name} split at " "
+			set {_name::2} to {_name::2} parsed as number
+			set {_npc} to npc from id {_name::2}
+			if clicked item is bucket named "&aもどる":
+				shop(player,{_name::2},1)
+			else if clicked item is book named "&bアイテムで取引する":
+				set {_merchant} to a new merchant named npc name of {_npc}
+				set {_contents::*} to file contents of "plugins/Shopkeeper/%{_name::2}%.yml"
+				set {_cont::*} to {_contents::%{_name::3}%} split at "//"
+				set {_amount::*} to {_cont::1} split at "::"
+				set {_amount::2} to {_amount::2} parsed as number
+				if {item.save.list::%{_amount::1}%} is set:
+					add {_amount::2} of {item.save.list::%{_amount::1}%} to {_result::*}
+				else:
+					add air to {_result::*}
+				set {_amount::*} to {_cont::2} split at "::"
+				set {_amount::2} to {_amount::2} parsed as number
+				if {item.save.list::%{_amount::1}%} is set:
+					add {_amount::2} of {item.save.list::%{_amount::1}%} to {_result::*}
+				else:
+					add air to {_result::*}
+				set {_amount::*} to {_cont::3} split at "::"
+				set {_amount::2} to {_amount::2} parsed as number
+				if {item.save.list::%{_amount::1}%} is set:
+					add {_amount::2} of {item.save.list::%{_amount::1}%} to {_result::*}
+				else:
+					add air to {_result::*}
+				if {_result::*} is set:
+					if {_result::3} is not air:
+						add (a new trade of {_result::1} and {_result::2} for {_result::3}) to {_recipes::*}
+				add trades {_recipes::*} to merchant {_merchant}
+				open merchant {_merchant} to player
+			else if clicked item's name is "&6お金で取引する":
+				set {_name} to inventory name of player's current inventory
+				set {_name::*} to {_name} split at " "
+				set {_contents::*} to file contents of "plugins/Shopkeeper/%{_name::2}%.yml"
+				set {_cont::*} to {_contents::%{_name::3}%} split at "//"
+				set slot 6 of player's current inventory to light green wool named "&a取引を確定する" with lore "&6&l価格: &e%{_cont::4}% ゴールド"
+			else if clicked item's name is "&a取引を確定する":
+				set {_gold} to line 1 of clicked item's lore
+				replace "&6&l価格: &e" with "" in {_gold}
+				replace " ゴールド" with "" in {_gold}
+				set {_gold} to {_gold} parsed as number
+				if {player.gold::%player's uuid%} >= {_gold}:
+					play "ENTITY_EXPERIENCE_ORB_PICKUP" to player at volume 1
+					give player slot 4 of player's current inventory
+					subtract {_gold} from {player.gold::%player's uuid%}
+					set slot 6 of player's current inventory to sunflower named "&6お金で取引する" with lore "&6&l価格: &e%{_gold}% ゴールド"
+					refsb(player)
+				else:
+					send "&c所持金が足りません..."
+	if name of player's current inventory contains "&6&l取引所":
+		cancel event
+		if event-inventory is player's current inventory:
+			set {_name} to inventory name of player's current inventory
+			replace "&6&l取引所 " with "" in {_name}
+			set {_name} to {_name} parsed as number
+			set {_npc} to npc from id {_name}
+			if clicked item is light green wool:
+				if clicked item's name is "&a次のページへ":
+					cancel event
+					set {_page} to name of slot 49 of player's current inventory
+					replace "&6現在のページ: " with "" in {_page}
+					set {_page} to {_page} parsed as number
+					add 1 to {_page}
+					shop(player,{_name},{_page})
+			if clicked item is red wool:
+				if clicked item's name is "&a前のページへ":
+					cancel event
+					set {_page} to name of slot 49 of player's current inventory
+					replace "&6現在のページ: " with "" in {_page}
+					set {_page} to {_page} parsed as number
+					subtract 1 from {_page}
+					if {_page} >= 1:
+						shop(player,{_name},{_page})
+			if index of clicked slot >= 9:
+				if index of clicked slot <= 44:
+					if clicked item is set:
+						set {_name} to inventory name of player's current inventory
+						replace "&6&l取引所 " with "" in {_name}
+						set {_name} to {_name} parsed as number
+						set {_page} to name of slot 49 of player's current inventory
+						replace "&6現在のページ: " with "" in {_page}
+						set {_page} to {_page} parsed as number
+						set {_slot} to 36 * ({_page} - 1) + (index of clicked slot - 8)
+						shopselect(player,{_name},{_slot})
+	if name of player's current inventory contains "&6&l取引を編集":
+		if event-inventory is player's current inventory:
+			if index of clicked slot is not 10 or 11 or 13:
+				cancel event
+			if clicked item is cauldron named "&c取引を削除":
+				set {_name} to inventory name of player's current inventory
+				set {_name::*} to {_name} split at " "
+				set {_name::2} to {_name::2} parsed as number
+				set {_filecontents::*} to file contents of "plugins/Shopkeeper/%{_name::2}%.yml"
+				delete {_filecontents::%{_name::3}%}
+				if {_filecontents::*} is not set:
+					delete file "plugins/Shopkeeper/%{_name::2}%.yml"
+					create file "plugins/Shopkeeper/%{_name::2}%.yml"
+				else:
+					set file contents of "plugins/Shopkeeper/%{_name::2}%.yml" to {_filecontents::*}
+				set {_npc} to npc from id {_name::2}
+				shopeditor(player,{_npc},{_name::2},1)
+			if clicked item's name is "&6価格の設定":
+				set {_name} to inventory name of player's current inventory
+				set {_name::*} to {_name} split at " "
+				set {_name::2} to {_name::2} parsed as number
+				set {shop.edit.coin::%player's uuid%} to "%{_name::2}%//%{_name::3}%"
+				close player's inventory
+				send "&a価格を入力してください"
+			if clicked item is oak door named "&b保存する":
+				if slot 10 of player's current inventory is not air:
+					if slot 13 of player's current inventory is not air:
+						set {_t} to true
+				set {_coin::*} to slot 15 of player's current inventory's lore
+				replace "&b現在の価格: &f" with "" in {_coin::1}
+				set {_coin::1} to {_coin::1} parsed as number
+				if {_coin::1} is not -1:
+					set {_t} to true
+				if {_t} is set:
+					set {_name} to inventory name of player's current inventory
+					set {_name::*} to {_name} split at " "
+					set {_name::2} to {_name::2} parsed as number
+					set {_item} to slot 10 of event-inventory
+					set {_parameters} to tag "Parameters" of nbt of {_item}
+					if tag "Id" of {_parameters} is set:
+						set {_result::1} to tag "Id" of {_parameters}
+						set {_cnt::1} to item amount of {_item}
+					else:
+						set {_result::1} to 0
+						set {_cnt::1} to 0
+					delete {_parameters}
+					set {_item} to slot 11 of event-inventory
+					set {_parameters} to tag "Parameters" of nbt of {_item}
+					if tag "Id" of {_parameters} is set:
+						set {_result::2} to tag "Id" of {_parameters}
+						set {_cnt::2} to item amount of {_item}
+					else:
+						set {_result::2} to 0
+						set {_cnt::2} to 0
+					delete {_parameters}
+					set {_item} to slot 13 of event-inventory
+					set {_parameters} to tag "Parameters" of nbt of {_item}
+					if tag "Id" of {_parameters} is set:
+						set {_result::3} to tag "Id" of {_parameters}
+						set {_cnt::3} to item amount of {_item}
+					else:
+						set {_result::3} to 0
+						set {_cnt::3} to 0
+					set {_coin::*} to slot 15 of player's current inventory's lore
+					replace "&b現在の価格: &f" with "" in {_coin::1}
+					set {_result::4} to {_coin::1}
+					set {_filecontents::*} to file contents of "plugins/Shopkeeper/%{_name::2}%.yml"
+					set {_filecontents::%{_name::3}%} to "%{_result::1}%::%{_cnt::1}%//%{_result::2}%::%{_cnt::2}%//%{_result::3}%::%{_cnt::3}%//%{_result::4}%"
+					set file contents of "plugins/Shopkeeper/%{_name::2}%.yml" to {_filecontents::*}
+					set {_npc} to npc from id {_name::2}
+					shopeditor(player,{_npc},{_name::2},1)
+	if name of player's current inventory contains "&6&l取引を作成":
+		if event-inventory is player's current inventory:
+			if index of clicked slot is not 10 or 11 or 13:
+				cancel event
+			if clicked item's name is "&6価格の設定":
+				set {_name} to inventory name of player's current inventory
+				replace "&6&l取引を作成 " with "" in {_name}
+				set {_name} to {_name} parsed as number
+				set {_item} to slot 10 of event-inventory
+				set {_parameters} to tag "Parameters" of nbt of {_item}
+				if tag "Id" of {_parameters} is set:
+					set {_result::1} to tag "Id" of {_parameters}
+					set {_cnt::1} to item amount of {_item}
+				else:
+					set {_result::1} to 0
+					set {_cnt::1} to 0
+				delete {_parameters}
+				set {_item} to slot 11 of event-inventory
+				set {_parameters} to tag "Parameters" of nbt of {_item}
+				if tag "Id" of {_parameters} is set:
+					set {_result::2} to tag "Id" of {_parameters}
+					set {_cnt::2} to item amount of {_item}
+				else:
+					set {_result::2} to 0
+					set {_cnt::2} to 0
+				delete {_parameters}
+				set {_item} to slot 13 of event-inventory
+				set {_parameters} to tag "Parameters" of nbt of {_item}
+				if tag "Id" of {_parameters} is set:
+					set {_result::3} to tag "Id" of {_parameters}
+					set {_cnt::3} to item amount of {_item}
+				else:
+					set {_result::3} to 0
+					set {_cnt::3} to 0
+				set {shop.create.coin::%player's uuid%} to "%{_result::1}%::%{_cnt::1}%//%{_result::2}%::%{_cnt::2}%//%{_result::3}%::%{_cnt::3}%//%{_name}%"
+				close player's inventory
+				send "&a価格を入力してください"
+		if clicked item is oak door named "&b保存する":
+			if slot 10 of player's current inventory is not air:
+				if slot 13 of player's current inventory is not air:
+					set {_t} to true
+			set {_coin::*} to slot 15 of player's current inventory's lore
+			replace "&b現在の価格: &f" with "" in {_coin::1}
+			set {_coin::1} to {_coin::1} parsed as number
+			if {_coin::1} is not -1:
+				set {_t} to true
+			if {_t} is set:
+				set {_name} to inventory name of player's current inventory
+				replace "&6&l取引を作成 " with "" in {_name}
+				set {_name} to {_name} parsed as number
+				set {_item} to slot 10 of event-inventory
+				set {_parameters} to tag "Parameters" of nbt of {_item}
+				if tag "Id" of {_parameters} is set:
+					set {_result::1} to tag "Id" of {_parameters}
+					set {_cnt::1} to item amount of {_item}
+				else:
+					set {_result::1} to 0
+					set {_cnt::1} to 0
+				delete {_parameters}
+				set {_item} to slot 11 of event-inventory
+				set {_parameters} to tag "Parameters" of nbt of {_item}
+				if tag "Id" of {_parameters} is set:
+					set {_result::2} to tag "Id" of {_parameters}
+					set {_cnt::2} to item amount of {_item}
+				else:
+					set {_result::2} to 0
+					set {_cnt::2} to 0
+				delete {_parameters}
+				set {_item} to slot 13 of event-inventory
+				set {_parameters} to tag "Parameters" of nbt of {_item}
+				if tag "Id" of {_parameters} is set:
+					set {_result::3} to tag "Id" of {_parameters}
+					set {_cnt::3} to item amount of {_item}
+				else:
+					set {_result::3} to 0
+					set {_cnt::3} to 0
+				set {_coin::*} to slot 15 of player's current inventory's lore
+				replace "&b現在の価格: &f" with "" in {_coin::1}
+				set {_result::4} to {_coin::1}
+				set {_filecontents::*} to file contents of "plugins/Shopkeeper/%{_name}%.yml"
+				if file "plugins/Shopkeeper/%{_name}%.yml" does not exist:
+					create file "plugins/Shopkeeper/%{_name}%.yml"
+				add "%{_result::1}%::%{_cnt::1}%//%{_result::2}%::%{_cnt::2}%//%{_result::3}%::%{_cnt::3}%//%{_result::4}%" to {_filecontents::*}
+				set file contents of "plugins/Shopkeeper/%{_name}%.yml" to {_filecontents::*}
+				set {_npc} to npc from id {_name}
+				shopeditor(player,{_npc},{_name},1)
+	if name of player's current inventory contains "&6&lショップを編集":
+		if event-inventory is player's current inventory:
+			set {_name} to inventory name of player's current inventory
+			replace "&6&lショップを編集 " with "" in {_name}
+			set {_name} to {_name} parsed as number
+			set {_npc} to npc from id {_name}
+			if clicked item is name tag:
+				if clicked item's name is "&aショップ名変更":
+					cancel event
+					send "&a名前を入力してください"
+					set {shop.edit::%player's uuid%} to {_name}
+					close player's inventory
+			if clicked item's name is "&b職業変更":
+				cancel event
+				add "NONE" to {_pro::*}
+				add "ARMORER" to {_pro::*}
+				add "BUTCHER" to {_pro::*}
+				add "CARTOGRAPHER" to {_pro::*}
+				add "CLERIC" to {_pro::*}
+				add "FARMER" to {_pro::*}
+				add "FISHERMAN" to {_pro::*}
+				add "FLETCHER" to {_pro::*}
+				add "LEATHERWORKER" to {_pro::*}
+				add "LIBRARIAN" to {_pro::*}
+				add "MASON" to {_pro::*}
+				add "NITWIT" to {_pro::*}
+				add "SHEPHERD" to {_pro::*}
+				add "TOOLSMITH" to {_pro::*}
+				add "WEAPONSMITH" to {_pro::*}
+				loop {_pro::*}:
+					if "%villager job of player's target entity%" is loop-value:
+						set {_n} to loop-index parsed as number
+						set {_n} to {_n}+1
+						if {_pro::%{_n}%} is not set:
+							set {_n} to 1
+						execute console command "/npc select %{_name}%"
+						execute console command "/npc profession %{_pro::%{_n}%}%"
+						set clicked item's lore to "&6現在の職業: &f%{_pro::%{_n}%}%"
+						stop
+			if clicked item is bone:
+				if clicked item's name is "&4削除":
+					cancel event
+					close player's inventory
+					execute console command "/npc select %{_name}%"
+					execute console command "/npc remove"
+					delete file "plugins/Shopkeeper/%{_name}%.yml"
+			if clicked item's name is "&1":
+				cancel event
+			if clicked item is light green wool:
+				if clicked item's name is "&a次のページへ":
+					cancel event
+					set {_page} to name of slot 49 of player's current inventory
+					replace "&6現在のページ: " with "" in {_page}
+					set {_page} to {_page} parsed as number
+					add 1 to {_page}
+					shopeditor(player,{_npc},{_name},{_page})
+			if clicked item is red wool:
+				if clicked item's name is "&a前のページへ":
+					cancel event
+					set {_page} to name of slot 49 of player's current inventory
+					replace "&6現在のページ: " with "" in {_page}
+					set {_page} to {_page} parsed as number
+					subtract 1 from {_page}
+					if {_page} >= 1:
+						shopeditor(player,{_npc},{_name},{_page})
+			if clicked item's name contains "&6現在のページ: ":
+				cancel event
+			if clicked item is book:
+				if clicked item's name is "&6取引を作成":
+					cancel event
+					set {_name} to inventory name of player's current inventory
+					replace "&6&lショップを編集 " with "" in {_name}
+					set {_name} to {_name} parsed as number
+					tradecreate(player,{_name},-1)
+			if index of clicked slot >= 9:
+				if index of clicked slot <= 44:
+					if clicked item is set:
+						cancel event
+						set {_name} to inventory name of player's current inventory
+						replace "&6&lショップを編集 " with "" in {_name}
+						set {_name} to {_name} parsed as number
+						set {_page} to name of slot 49 of player's current inventory
+						replace "&6現在のページ: " with "" in {_page}
+						set {_page} to {_page} parsed as number
+						set {_slot} to 36 * ({_page} - 1) + (index of clicked slot - 8)
+						tradeedit(player,{_name},{_slot})
+command /shopkeeper [<text>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			set {_name} to arg-1
+			replace all "&" with "§" in {_name}
+			create citizen named {_name} at location of player as a villager
+		else:
+			create citizen named "Shopkeeper" at location of player as a villager
+		send "&aショップキーパーを作成しました" to player
+on chat:
+	if {shop.edit::%player's uuid%} is set:
+		cancel event
+		set {_npc} to npc from id {shop.edit::%player's uuid%}
+		set {_me} to message
+		replace all "&" with "§" in {_me}
+		set npc name of {_npc} to {_me}
+		send "&a名前を変更しました"
+		delete {shop.edit::%player's uuid%}
+	if {shop.create.coin::%player's uuid%} is set:
+		cancel event
+		set {_result::*} to {shop.create.coin::%player's uuid%} split at "//"
+		set {_me} to message parsed as number
+		set {_result::4} to {_result::4} parsed as number
+		send "&a価格を変更しました"
+		tradecreate(player,{_result::4},{_me})
+		broadcast "%{shop.create.coin::%player's uuid%}%"
+		wait a tick
+		set {_amount::*} to {_result::1} split at "::"
+		set {_amount::2} to {_amount::2} parsed as number
+		set slot 10 of player's current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+		set {_amount::*} to {_result::2} split at "::"
+		set {_amount::2} to {_amount::2} parsed as number
+		set slot 11 of player's current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+		set {_amount::*} to {_result::3} split at "::"
+		set {_amount::2} to {_amount::2} parsed as number
+		set slot 13 of player's current inventory to {_amount::2} of {item.save.list::%{_amount::1}%}
+		delete {shop.create.coin::%player's uuid%}
+	if {shop.edit.coin::%player's uuid%} is set:
+		cancel event
+		set {_name::*} to {shop.edit.coin::%player's uuid%} split at "//"
+		loop {_name::*}:
+			set {_name::%loop-index%} to loop-value parsed as number
+		set {_me} to message parsed as number
+		send "&a価格を変更しました"
+		set {_filecontents::*} to file contents of "plugins/Shopkeeper/%{_name::1}%.yml"
+		set {_result::*} to {_filecontents::%{_name::2}%} split at "//"
+		set {_result::4} to {_me}
+		set {_filecontents::%{_name::2}%} to "%{_result::1}%//%{_result::2}%//%{_result::3}%//%{_result::4}%"
+		set file contents of "plugins/Shopkeeper/%{_name::1}%.yml" to {_filecontents::*}
+		tradeedit(player,{_name::1},{_name::2})
+		delete {shop.edit.coin::%player's uuid%}
+on quit:
+	delete {shop.edit::%player's uuid%}
+	delete {shop.edit.coin::%player's uuid%}
+	delete {shop.create.coin::%player's uuid%}

@@ -1,0 +1,204 @@
+function particle(c: number, p: text, x: number, y: number, z: number, e: number, lc: location):
+	spawn {_c} of "%{_p}%" offset by {_x}, {_y}, {_z} with extra {_e} at {_lc}
+function playsound(s: text, lc: location, pit: number, v: number):
+	play raw sound "%{_s}%" at {_lc} with pitch {_pit} volume {_v}
+function openmenu(p: player, type: text):
+	set {_uuid} to uuid of {_p}
+	if {_type} is "home":
+		open chest with 2 row named "&a&lメニュー" to {_p}
+		set {_c} to 0
+		loop 9 times:
+			set slot {_c} of {_p}'s current inventory to black stained glass pane named "&cNope!"
+			add 1 to {_c}
+		set slot 4 of {_p}'s current inventory to skull of {_p} named "&a&lステータス"
+		set {_MeeleD} to {player.damage::%{_uuid}%} + {result.damage::%{_uuid}%}
+		set {_HP} to {player.health::%{_uuid}%} + {result.health::%{_uuid}%}
+		set {_PT} to {player.protection::%{_uuid}%} + {result.protection::%{_uuid}%}
+		set {_MP} to {player.mp::%{_uuid}%} + {result.mp::%{_uuid}%}
+		set {_MagicD} to {player.magicdamage::%{_uuid}%} + {result.magicdamage::%{_uuid}%}
+		set {_dex} to {player.dex::%{_uuid}%} + {result.dex::%{_uuid}%}
+		set {_lore::0} to "&7&m--------------------------"
+		set {_lore::1} to " "
+		set {_lore::2} to "&6&lXP: &f%{player.xp::%{_uuid}%}%"
+		set {_lore::3} to "&6&lNeedXP: &f%{player.needxp::%{_uuid}%} - {player.xp::%{_uuid}%}%"
+		set {_lore::4} to " "
+		set {_lore::5} to "&7&m--------------------------"
+		set {_lore::6} to " "
+		set {_lore::7} to "&c&l攻撃力: &f%{_MeeleD}%      &9&l防御力: &f%{_PT}%"
+		set {_lore::8} to "&e&l魔力: &f%{_MagicD}%      &a&l体力: &f%{_HP}%"
+		set {_lore::9} to "&d&lMP: &f%{_MP}%      &2&lDEX: &f%{_dex}%"
+		set {_lore::10} to " "
+		set {_lore::11} to "&7&m--------------------------"
+		set slot 4 of {_p}'s current inventory's lore to {_lore::*}
+on inventory click:
+	if event-inventory's name is "&a&lメニュー":
+		cancel event
+on join:
+	refsb(player)
+command /debug:
+	permission: admin
+	trigger:
+		if {debug.scoreboard::%player's uuid%} is set:
+			delete {debug.scoreboard::%player's uuid%}
+			send "&e&l［デバッグ］: &fデバッグモードをオフにしました"
+		else:
+			set {debug.scoreboard::%player's uuid%} to true
+			send "&e&l［デバッグ］: &fデバッグモードをオンにしました"
+		refsb(player)
+every 30 seconds:
+	set {_now} to now
+	set {_now::*} to split "%{_now}%" at " "
+	set {_now::2} to {_now::2} parsed as time
+	set {now} to {_now::2}
+on join:
+	while player is online:
+		if {player.job::%player's uuid%} is not set:
+			send action bar "&c&l職業を選択してください" to player
+		else:
+			if {player.skill.cooldown::%player's uuid%} is set:
+				send action bar "&a&lHP&7: &f%{player.nowhealth::%player's uuid%}% &7/ &e%{player.health::%player's uuid%} + {result.health::%player's uuid%}%   &c&lクールダウン中...   &d&lMP&7: &f%{player.nowmp::%player's uuid%}% &7/ &b%{player.mp::%player's uuid%} + {result.mp::%player's uuid%}%" to player
+				subtract 1 from {player.skill.cooldown::%player's uuid%}
+				if {player.skill.cooldown::%player's uuid%} is 0:
+					delete {player.skill.cooldown::%player's uuid%}
+			else:
+				send action bar "&a&lHP&7: &f%{player.nowhealth::%player's uuid%}% &7/ &e%{player.health::%player's uuid%} + {result.health::%player's uuid%}%       &d&lMP&7: &f%{player.nowmp::%player's uuid%}% &7/ &b%{player.mp::%player's uuid%} + {result.mp::%player's uuid%}%" to player
+		wait a tick
+command /location [<text>]:
+	permission: admin
+	trigger:
+		set {save.location::%arg-1%} to location of player
+on chat:
+	event is not canceled
+	cancel event
+	if {item.create.cache::%player's uuid%} is not set:
+		if {item.create.info::%player's uuid%} is not set:
+			if {item.create.gold::%player's uuid%} is not set:
+				if {shop.edit::%player's uuid%} is not set:
+					if {shop.edit.coin::%player's uuid%} is not set:
+						if {shop.create.coin::%player's uuid%} is not set:
+							broadcast "%player's prefix%%player%&7:&r %message%"
+every a second:
+	loop all players:
+		if {player.nowmp::%loop-player's uuid%} < {player.mp::%loop-player's uuid%} + {result.mp::%loop-player's uuid%}:
+			add 1 to {player.nowmp::%loop-player's uuid%}
+		if {player.nowmp::%loop-player's uuid%} >= {player.mp::%loop-player's uuid%} + {result.mp::%loop-player's uuid%}:
+			set {player.nowmp::%loop-player's uuid%} to {player.mp::%loop-player's uuid%} + {result.mp::%loop-player's uuid%}
+		if {player.nowhealth::%loop-player's uuid%} < {player.health::%loop-player's uuid%} + {result.health::%loop-player's uuid%}:
+			if loop-player is alive:
+				add 1 to {player.nowhealth::%loop-player's uuid%}
+		if {player.nowhealth::%loop-player's uuid%} >= {player.health::%loop-player's uuid%} + {result.health::%loop-player's uuid%}:
+			set {player.nowhealth::%loop-player's uuid%} to {player.health::%loop-player's uuid%} + {result.health::%loop-player's uuid%}
+on item spawn:
+	if event-item's name contains "mobdrop":
+		cancel event
+		loop event-item's lore:
+			set {_l} to loop-value
+			replace all "§f" with "" in {_l}
+			drop {item.save.list::%{_l}%} at location of event-entity without velocity
+every a tick:
+	loop all players:
+		if {player.job::%loop-player's uuid%} is set:
+			if loop-player is alive:
+				set {_r} to {player.nowhealth::%loop-player's uuid%} / ({player.health::%loop-player's uuid%} + {result.health::%loop-player's uuid%})
+				set loop-player's health to 10 * {_r}
+on respawn:
+	set {player.nowhealth::%player's uuid%} to {player.health::%player's uuid%} + {result.health::%player's uuid%}
+
+on join:
+	wait 1 second
+	set {_holo} to new holo at location 0.5 above head location of player
+	wait a tick
+	set {_r} to rounded down 20 * {player.nowhealth::%player's uuid%} / ({player.health::%player's uuid%} + {result.health::%player's uuid%})
+	set {_t} to "&a"
+	loop {_r} times:
+		set {_t} to "%{_t}%▎"
+	set {_t} to "%{_t}%&7"
+	loop 20 - {_r} times:
+		set {_t} to "%{_t}%▎"
+	add text "&a&lHP&7:&f[%{_t}%&f]" to holo {_holo}
+	hide holo {_holo} from player
+	while player is online:
+		set {_r} to rounded down 20 * {player.nowhealth::%player's uuid%} / ({player.health::%player's uuid%} + {result.health::%player's uuid%})
+		#send "%{_r}%"
+		if {_r} is not {_r2}:
+			set {_t} to "&a"
+			set {_r2} to {_r}
+			loop {_r} times:
+				set {_t} to "%{_t}%▎"
+			set {_t} to "%{_t}%&7"
+			loop 20 - {_r} times:
+				set {_t} to "%{_t}%▎"
+			set text for holo {_holo} to "&a&lHP&7:&f[%{_t}%&f]" at line 0
+		set location of holo {_holo} to location 1 above head location of player
+		wait a tick
+	unregister holo {_holo}
+
+every 5 tick:
+	loop all players:
+		if loop-player's current inventory's type is crafting table inventory:
+			if slot 3 of loop-player's current inventory is air:
+				set slot 3 of loop-player's current inventory to compass named "&a&lメニュー"
+				set slot 4 of loop-player's current inventory to ender chest named "&a&lドロップ品ポーチ" with lore "&7シフト＋右クリックですべて売却"
+on inventory close:
+	if event-inventory's type is crafting table inventory:
+		set slot 3 of event-inventory to air
+		set slot 4 of event-inventory to air
+on inventory click:
+	if event-inventory's type is crafting table inventory:
+		cancel event
+		wait a tick
+		if event-item is compass named "&a&lメニュー":	
+			openmenu(player,"home")
+on quit:
+	set slot 3 of player's current inventory to air
+	set slot 4 of player's current inventory to air
+
+on inventory drag:
+	if event-inventory's name is not "Large Chest" or "Chest":
+		cancel event
+on damage:
+	if victim is not a player:
+		if damage cause is fall:
+			cancel event
+		set {_parameters} to tag "Parameters" of nbt of victim's leggings
+		set {_maxhp} to tag "Maxhealth" of {_parameters}
+		set {_hp} to tag "Health" of {_parameters}
+		if {hologram.mob::%victim's uuid%} is not set:
+			event is not canceled
+			set {hologram.mob::%victim's uuid%} to true
+			set {_holo} to new holo at location 0.5 above head location of victim
+			wait a tick
+			set {_r} to rounded down 20 * {_hp} / {_maxhp}
+			set {_t} to "&a"
+			loop {_r} times:
+				set {_t} to "%{_t}%▎"
+			set {_t} to "%{_t}%&7"
+			loop 20 - {_r} times:
+				set {_t} to "%{_t}%▎"
+			add text "&a&lHP&7:&f[%{_t}%&f]" to holo {_holo}
+			while victim's health > 0:
+				set {_parameters} to tag "Parameters" of nbt of victim's leggings
+				set {_maxhp} to tag "Maxhealth" of {_parameters}
+				set {_hp} to tag "Health" of {_parameters}
+				set {_r} to rounded down 20 * {_hp} / {_maxhp}
+				if {_r} is not {_r2}:
+					if {_hp} / {_maxhp} > 0.55:
+						set {_t} to "&a"
+						set {_color} to "&a"
+					else if {_hp} / {_maxhp} > 0.25:
+						set {_t} to "&e"
+						set {_color} to "&e"
+					else:
+						set {_t} to "&c"
+						set {_color} to "&c"
+					set {_r2} to {_r}
+					loop {_r} times:
+						set {_t} to "%{_t}%▎"
+					set {_t} to "%{_t}%&7"
+					loop 20 - {_r} times:
+						set {_t} to "%{_t}%▎"
+					set text for holo {_holo} to "%{_color}%&lHP&7:&f[%{_t}%&f]" at line 0
+				set location of holo {_holo} to location 1 above head location of victim
+				wait a tick
+			unregister holo {_holo}
+			delete {hologram.mob::%victim's uuid%}

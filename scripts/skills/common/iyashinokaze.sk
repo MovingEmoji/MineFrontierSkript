@@ -1,0 +1,71 @@
+options:
+	skill_name: "癒しの風"
+	skill_type: "共通"
+	mp: 12
+	cool_time: 30 seconds
+
+on load:
+	registerSkill({@skill_name},{@skill_type})
+
+on offhand switch:
+	if {player.mobile.skill::%player's uuid%} is {@skill_name}:
+		if {player.nowmp::%player's uuid%} >= {@mp}:
+			if difference between {player.mobile.cooldown::%player's uuid%} and now >= {@cool_time}:
+				set {player.mobile.cooldown::%player's uuid%} to now
+				subtract {@mp} from {player.nowmp::%player's uuid%}
+				playsound("ENTITY_ENDER_DRAGON_FLAP",location of player,1.5,0.7)
+				apply SLOW 10 without any particles to player for 3 seconds
+				loop 6 times:
+					wait 10 ticks
+				set {_lc} to location of player
+				set {_lc2} to {_lc}
+				set y coord of {_lc2} to y coord of {_lc2} + 2 
+				set {_lc3} to {_lc2}
+				set y coord of {_lc3} to y coord of {_lc3} + 2
+				set {_count} to 0
+				set {_count2} to 0
+				#play raw sound "ITEM_ELYTRA_FLYING" at {_lc} with pitch 1 and volume 0.5
+				#playsound("ITEM_ELYTRA_FLYING",{_lc},1,0.5)
+				set {_vector} to vector 8,0,0
+				orbit({_lc})
+				loop 40 times:
+					add 1 to {_count}
+					particle(2,"VILLAGER_HAPPY",0.4,1,0.4,1,{_lc2})
+					loop entities in radius 8 around {_lc}:
+						if loop-entity is a player:
+							apply SPEED 1 without any particles to loop-entity for 11 ticks
+							if {_count} == 4:
+								set {_heal} to ({player.health::%loop-entity's uuid%} + {result.health::%loop-entity's uuid%}) / 10
+								set {_heal} to round({_heal})
+								playsound("ENTITY_PLAYER_LEVELUP",location of loop-entity,2,0.5)
+								if {player.nowhealth::%loop-entity's uuid%} + {_heal} < {player.health::%loop-entity's uuid%} + {result.health::%loop-entity's uuid%}:
+									add {_heal} to {player.nowhealth::%loop-entity's uuid%}
+								else:
+									set {player.nowhealth::%loop-entity's uuid%} to {player.health::%loop-entity's uuid%} + {result.health::%loop-entity's uuid%}
+					if {_count} == 4:
+						playsound("ENTITY_PLAYER_LEVELUP",{_lc},2,0.4)
+						particle(10,"FIREWORKS_SPARK",0.3,0.3,0.3,0.1,{_lc2})
+						particle(1,"SWEEP_ATTACK",0,0,0,0.1,{_lc2})
+						add 1 to {_count2}
+						set {_count} to 0
+					if {_count2} == 5:
+						#play raw sound "ITEM_ELYTRA_FLYING" at {_lc} with pitch 1 and volume 0.5
+						#playsound("ITEM_ELYTRA_FLYING",{_lc},1,0.5)
+					if {_count2} == 10:
+						playsound("ENTITY_PLAYER_LEVELUP",{_lc},0.5,1)
+					wait 10 ticks
+			else:
+				set {_d} to difference between {player.mobile.cooldown::%player's uuid%} and now
+				set {player.skill.cooldown::%player's uuid%} to 10
+				play "BLOCK_NOTE_BLOCK_BASS" to player at volume 2
+		else:
+			send "&c&lMPが足りません..."
+
+function orbit(lc: location):
+	set {_vector} to vector 8,0,0
+	set y coord of {_lc} to y coord of {_lc} + 0.2
+	loop 400 times:
+		set {_lc2} to {_lc} offset by {_vector}
+		particle(1,"END_ROD",0,0,0,0.01,{_lc2})
+		rotate {_vector} around y-axis by 5
+		wait a tick

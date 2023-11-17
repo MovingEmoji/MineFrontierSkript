@@ -1,0 +1,61 @@
+options:
+	skill_name: "体当たり"
+	skill_type: "戦士"
+	mp: 8
+	cool_time: 10 seconds
+
+on load:
+	registerSkill({@skill_name},{@skill_type})
+
+function ForceTaiatari(p: player, type: text):
+	set {_uuid} to uuid of {_p}
+	if {player.%{_type}%.skill::%{_uuid}%} is {@skill_name}:
+		if difference between {player.%{_type}%.cooldown::%{_uuid}%} and now >= {@cool_time}:
+			if {@skill_type} contains {player.job::%{_uuid}%}:
+				if {player.nowmp::%{_uuid}%} >= {@mp}:
+					subtract {@mp} from {player.nowmp::%{_uuid}%}
+					set {player.%{_type}%.cooldown::%{_uuid}%} to now
+					set {_vector} to vector from yaw {_p}'s yaw and pitch -5
+					playsound("BLOCK_ANVIL_USE",location of {_p},2,0.5)
+					playsound("ENTITY_GENERIC_EXPLODE",location of {_p},1.5,1)
+					loop 10 times:
+						particle(3,"campfire_cosy_smoke",1,0.5,1,0.05,location of {_p})
+						set {_plc} to {_p}'s location
+						push {_p} {_vector} at speed 0.3
+						loop entities in radius 2 around {_p}:
+							if loop-entity is not {_p}:
+								if loop-entity is not villager:
+									if loop-entity is not {_target::*}:
+										set {_elc} to loop-entity's location
+										#ベクトル計算
+										set {_vx} to x coordinate of {_elc} - x coordinate of {_plc}
+										set {_vy} to 0.8
+										#set {_vy} to y coordinate of {_elc} - y coordinate of {_plc}
+										set {_vz} to z coordinate of {_elc} - z coordinate of {_plc}
+										set {_knockback} to vector {_vx}, {_vy}, {_vz}
+										set {_knockback} to normalized {_knockback}
+										#終わり
+										make {_p} damage loop-entity by 200
+										push loop-entity {_knockback} at speed 0.8
+										add loop-entity to {_target::*}
+						wait 2 ticks
+				else:
+					send "&c&lMPが足りません..." to {_p}
+			else:
+				send "&c&l現在の職業ではこのスキルを使用できません" to {_p}
+		else:
+			set {_d} to difference between {player.%{_type}%.cooldown::%{_uuid}%} and now
+			set {player.skill.cooldown::%{_uuid}%} to 10
+			play "BLOCK_NOTE_BLOCK_BASS" to {_p} at volume 2
+
+on offhand switch:
+	ForceTaiatari(player,"mobile")
+
+on right click:
+	if player is sneaking:
+		ForceTaiatari(player,"common1")
+on drop:
+	if player is sneaking:
+		ForceTaiatari(player,"common2")
+	else:
+		ForceTaiatari(player,"common3")

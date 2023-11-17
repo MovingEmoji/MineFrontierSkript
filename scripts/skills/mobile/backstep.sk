@@ -1,0 +1,49 @@
+options:
+	skill_name: "バックステップ"
+	skill_type: "共通"
+	mp: 0
+	cool_time: 5 seconds
+
+on load:
+	registerSkill({@skill_name},{@skill_type})
+
+function ForceBackstep(p: player, type: text):
+	set {_uuid} to uuid of {_p}
+	if {player.%{_type}%.skill::%{_uuid}%} is {@skill_name}:
+		if difference between {player.%{_type}%.cooldown::%{_uuid}%} and now >= {@cool_time}:
+			if {@skill_type} contains {player.job::%{_uuid}%}:
+				set {_t} to true
+			else if {@skill_type} is "共通":
+				set {_t} to true
+			if {_t} is set:
+				if {player.nowmp::%{_uuid}%} >= {@mp}:
+					subtract {@mp} from {player.nowmp::%{_uuid}%}
+					set {player.%{_type}%.cooldown::%{_uuid}%} to now
+					set {_vector} to vector from yaw {_p}'s yaw and pitch -12
+					set x of {_vector} to x of {_vector} * -1.15
+					set z of {_vector} to z of {_vector} * -1.15
+					set {_p}'s velocity to {_vector}
+					particle(10,"CRIT",1,0.5,1,0.1,location 1 above location of {_p})
+					playsound("ENTITY_PLAYER_ATTACK_SWEEP",location of {_p},0.5,1)
+					wait 2 tick
+					apply speed 2 without particles to {_p} for 1.2 seconds
+				else:
+					send "&c&lMPが足りません..." to {_p}
+			else:
+				send "&c&l現在の職業ではこのスキルを使用できません" to {_p}
+		else:
+			set {_d} to difference between {player.%{_type}%.cooldown::%{_uuid}%} and now
+			set {player.skill.cooldown::%{_uuid}%} to 10
+			play "BLOCK_NOTE_BLOCK_BASS" to {_p} at volume 2
+
+on offhand switch:
+	ForceBackstep(player,"mobile")
+
+on right click:
+	if player is sneaking:
+		ForceBackstep(player,"common1")
+on drop:
+	if player is sneaking:
+		ForceBackstep(player,"common2")
+	else:
+		ForceBackstep(player,"common3")

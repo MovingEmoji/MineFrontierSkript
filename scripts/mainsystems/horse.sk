@@ -1,0 +1,115 @@
+on right click:
+	set {_item} to {item.save.list::80}
+	if player's tool is {item.save.list::80}:
+		cancel event
+		if {player.horse::%player's uuid%} is not set:
+			spawn horse at location of player with nbt "{Health:20f,Bred:0b,Tame:1b,Variant:515,Attributes:[{Name:generic.max_health,Base:20},{Name:generic.movement_speed,Base:0.5},{Name:horse.jump_strength,Base:0.7}],SaddleItem:{id:""minecraft:saddle"",Count:1b}}"
+			set {player.horse::%player's uuid%} to last spawned entity
+			set player's tool to shiny {_item}
+	if player's tool is shiny {_item}:
+		cancel event
+		if {player.horse::%player's uuid%} is set:
+			if player's target is {player.horse::%player's uuid%}:
+				set {_lc} to location of {player.horse::%player's uuid%}
+				particle(10,"CLOUD",0.5,0.5,0.5,0.01,location 1 above location of {player.horse::%player's uuid%})
+				set y coord of {_lc} to -5
+				teleport {player.horse::%player's uuid%} to {_lc}
+				delete {player.horse::%player's uuid%}
+				set player's tool to {item.save.list::80}
+
+on right click:
+	set {_item} to {item.save.list::81}
+	if player's tool is {item.save.list::81}:
+		cancel event
+		if {player.horse::%player's uuid%} is not set:
+			spawn horse at location of player with nbt "{Health:30f,Bred:0b,Tame:1b,Variant:111,Attributes:[{Name:generic.max_health,Base:30},{Name:generic.movement_speed,Base:0.6},{Name:horse.jump_strength,Base:0.7}],SaddleItem:{id:""minecraft:saddle"",Count:1b}}"
+			set {player.horse::%player's uuid%} to last spawned entity
+			set player's tool to shiny {_item}
+	if player's tool is shiny {_item}:
+		cancel event
+		if {player.horse::%player's uuid%} is set:
+			if player's target is {player.horse::%player's uuid%}:
+				set {_lc} to location of {player.horse::%player's uuid%}
+				particle(10,"CLOUD",0.5,0.5,0.5,0.01,location 1 above location of {player.horse::%player's uuid%})
+				set y coord of {_lc} to -5
+				teleport {player.horse::%player's uuid%} to {_lc}
+				delete {player.horse::%player's uuid%}
+				set player's tool to {item.save.list::81}
+
+on right click:
+	set {_item} to {item.save.list::82}
+	if player's tool is {item.save.list::82}:
+		cancel event
+		if {player.horse::%player's uuid%} is not set:
+			spawn horse at location of player with nbt "{Health:40f,Bred:0b,Tame:1b,Variant:855,Attributes:[{Name:generic.max_health,Base:40},{Name:generic.movement_speed,Base:0.7},{Name:horse.jump_strength,Base:0.7}],SaddleItem:{id:""minecraft:saddle"",Count:1b}}"
+			set {player.horse::%player's uuid%} to last spawned entity
+			set player's tool to shiny {_item}
+	if player's tool is shiny {_item}:
+		cancel event
+		if {player.horse::%player's uuid%} is set:
+			if player's target is {player.horse::%player's uuid%}:
+				set {_lc} to location of {player.horse::%player's uuid%}
+				particle(10,"CLOUD",0.5,0.5,0.5,0.01,location 1 above location of {player.horse::%player's uuid%})
+				set y coord of {_lc} to -5
+				teleport {player.horse::%player's uuid%} to {_lc}
+				delete {player.horse::%player's uuid%}
+				set player's tool to {item.save.list::82}
+
+on right click:
+	set {_item} to {item.save.list::83}
+	if player's tool is {item.save.list::83}:
+		cancel event
+		if {player.horse::%player's uuid%} is not set:
+			spawn horse at location of player with nbt "{Health:50f,Bred:0b,Tame:1b,Variant:345,Attributes:[{Name:generic.max_health,Base:50},{Name:generic.movement_speed,Base:0.8},{Name:horse.jump_strength,Base:0.7}],SaddleItem:{id:""minecraft:saddle"",Count:1b}}"
+			set {player.horse::%player's uuid%} to last spawned entity
+			set player's tool to shiny {_item}
+	if player's tool is shiny {_item}:
+		cancel event
+		if {player.horse::%player's uuid%} is set:
+			if player's target is {player.horse::%player's uuid%}:
+				set {_lc} to location of {player.horse::%player's uuid%}
+				particle(10,"CLOUD",0.5,0.5,0.5,0.01,location 1 above location of {player.horse::%player's uuid%})
+				set y coord of {_lc} to -5
+				teleport {player.horse::%player's uuid%} to {_lc}
+				delete {player.horse::%player's uuid%}
+				set player's tool to {item.save.list::83}
+
+on right click:
+	set {_item} to {item.save.list::84}
+	if player's tool is {item.save.list::84}:
+		cancel event
+		if {player.horse::%player's uuid%} is not set:
+			create lightning effect at location of player
+			spawn horse at location of player with nbt "{Health:60f,Bred:0b,Tame:1b,Variant:999,Attributes:[{Name:generic.max_health,Base:60},{Name:generic.movement_speed,Base:0.9},{Name:horse.jump_strength,Base:0.7}],SaddleItem:{id:""minecraft:saddle"",Count:1b}}"
+			set {player.horse::%player's uuid%} to last spawned entity
+			set player's tool to shiny {_item}
+	if player's tool is shiny {_item}:
+		cancel event
+		if {player.horse::%player's uuid%} is set:
+			if player's target is {player.horse::%player's uuid%}:
+				set {_lc} to location of {player.horse::%player's uuid%}
+				particle(10,"CLOUD",0.5,0.5,0.5,0.01,location 1 above location of {player.horse::%player's uuid%})
+				set y coord of {_lc} to -5
+				teleport {player.horse::%player's uuid%} to {_lc}
+				delete {player.horse::%player's uuid%}
+				set player's tool to {item.save.list::84}
+
+
+on right click:
+	if player's target is horse:
+		if player's target is not {player.horse::%player's uuid%}:
+			cancel event
+		else if player is sneaking:
+			cancel event
+on quit:
+	if {player.horse::%player's uuid%} is set:
+		set {_lc} to location of {player.horse::%player's uuid%}
+		particle(10,"CLOUD",0.5,0.5,0.5,0.01,location 1 above location of {player.horse::%player's uuid%})
+		set y coord of {_lc} to -5
+		teleport {player.horse::%player's uuid%} to {_lc}
+		delete {player.horse::%player's uuid%}
+on damage of horse:
+	set {_parameters} to nbt of victim
+	if tag "Tame" of {_parameters} is set:
+		if damage cause is not void:
+			cancel event

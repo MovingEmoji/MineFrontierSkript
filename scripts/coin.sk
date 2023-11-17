@@ -1,0 +1,26 @@
+function loadGold(p: player):
+	set {_uuid} to uuid of {_p}
+	if file "../PlayerData/%{_uuid}%/coin.yml" does not exist:
+		create file "../PlayerData/%{_uuid}%/coin.yml"
+		write "Gold: 1000" at line 1 to file "../PlayerData/%{_uuid}%/coin.yml"
+	set {_content::*} to file contents of "../PlayerData/%{_uuid}%/coin.yml"
+	replace "Gold: " with "" in {_content::1}
+	set {player.gold::%{_uuid}%} to {_content::1} parsed as number
+function saveGold(p: player):
+	set {_uuid} to uuid of {_p}
+	if file "../PlayerData/%{_uuid}%/coin.yml" exists:
+		set line 1 in file "../PlayerData/%{_uuid}%/coin.yml" to "Gold: %{player.gold::%{_uuid}%}%"
+	delete {player.gold::%{_uuid}%}
+command /gold [<text>] [<number>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "set":
+				set {player.gold::%player's uuid%} to arg-2
+			if arg-1 is "give":
+				add arg-2 to {player.gold::%player's uuid%}
+			refsb(player)
+on join:
+	loadGold(player)
+on quit:
+	saveGold(player)

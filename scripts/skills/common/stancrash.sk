@@ -1,0 +1,81 @@
+options:
+	skill_name: "スタンクラッシュ"
+	skill_type: "戦士"
+	mp: 8
+	cool_time: 12 seconds
+
+on load:
+	registerSkill({@skill_name},{@skill_type})
+
+on offhand switch:
+	if {player.mobile.skill::%player's uuid%} is {@skill_name}:
+		if {player.nowmp::%player's uuid%} >= {@mp}:
+			if difference between {player.mobile.cooldown::%player's uuid%} and now >= {@cool_time}:
+				if {stancrash.%player's uuid%} is not set:
+					set {player.mobile.cooldown::%player's uuid%} to now
+					subtract {@mp} from {player.nowmp::%player's uuid%}
+					push player upwards at speed 1
+					particle(30,"CLOUD",0.3,0.2,0.3,0.1,location of player)
+					playsound("ENTITY_GHAST_SHOOT",player,1,1)
+					set {stancrash.%player's uuid%} to true
+					set {_count} to 0
+					set {_count2} to 0
+					set {_pitch} to 0.5
+					set {_variate.buff} to 0
+					wait 5 ticks
+					while {stancrash.%player's uuid%} is set:
+						add 1 to {_count}
+						if {_count} == 2:
+							particle(8,"CRIT",0.3,1,0.3,0.01,location of player)
+							particle(4,"FLAME",0.3,1,0.3,0.01,location of player)
+							playsound("ENTITY_EXPERIENCE_ORB_PICKUP",location of player,{_pitch},0.5)
+							add 0.01 to {_pitch}
+							set {_count} to 0
+							add 1 to {_count2}
+							if {_count2} == 2:
+								set {_count2} to 0
+								if {_variate.buff} < 0.5:
+									add 0.05 to {_variate.buff}
+						if player is on ground:
+							delete {stancrash.%player's uuid%}
+							set {_buff} to ({player.damage::%player's uuid%} + {result.damage::%player's uuid%}) * {_variate.buff}
+							set {_buff} to round({_buff})
+							set {_plc} to player's location
+							playsound("ENTITY_GENERIC_EXPLODE",location of player,1.5,1)
+							loop blocks in radius 4 around player:
+								if y coord of loop-block <= y coord of location of player + 1:
+									if y coord of loop-block > y coord of location of player:
+										if distance between player and loop-block > 3:
+											particle(2,"LAVA",0,0,0,0.01,loop-block)
+							loop entities in radius 4 around player:
+								if loop-entity is not a player:
+									if loop-entity is not VILLAGER:
+										if loop-entity is not ARMOR STAND:
+											set {_elc} to loop-entity's location
+											set {_vx} to x coordinate of {_elc} - x coordinate of {_plc}
+											set {_vy} to 1
+											set {_vz} to z coordinate of {_elc} - z coordinate of {_plc}
+											set {_knockback} to vector {_vx}, {_vy}, {_vz}
+											set {_knockback} to normalized {_knockback}
+											set {variate.damage::%player's uuid%} to {_buff}
+											make player damage loop-entity by 200
+											push loop-entity {_knockback} at speed 0.8
+											apply SLOW 5 without any particles to loop-entity for 3 seconds
+						wait a tick
+			else:
+				set {_d} to difference between {player.mobile.cooldown::%player's uuid%} and now
+				set {player.skill.cooldown::%player's uuid%} to 10
+				play "BLOCK_NOTE_BLOCK_BASS" to player at volume 2
+		else:
+			send "&c&lMPが足りません..."
+
+on damage:
+	if victim is player:
+		if {stancrash.%victim's uuid%} is set:
+			cancel event
+
+on quit:
+	delete {stancrash.%player's uuid%}
+
+on death:
+	delete {stancrash.%victim's uuid%}
