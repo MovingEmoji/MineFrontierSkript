@@ -1,3 +1,12 @@
+options:
+	program_name: ItemAPI
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
 function openitemlist(p: player, page: number):
 	open chest with 6 rows named "&a&lアイテムリスト &7Page:%{_page}%" for {_p}
 	set {_start} to 45 * {_page} - 44
@@ -1156,9 +1165,6 @@ command /item [<text>] [<number>]:
 			if arg-1 is "delete":
 				send "&f「 &r%{item.save.list::%arg-2%}'s display name% &f」 &c&l&削除しました"
 				delete {item.save.list::%arg-2%}
-command /sethead:
-	trigger:
-		set player's helmet to player's tool
 command /kantei:
 	trigger:
 		set {_parameters} to tag "Parameters" of nbt of player's tool

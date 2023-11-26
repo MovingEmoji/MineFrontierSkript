@@ -1,0 +1,21 @@
+options:
+	program_name: CoreAPI
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
+function particle(c: number, p: text, x: number, y: number, z: number, e: number, lc: location):
+	spawn {_c} of "%{_p}%" offset by {_x}, {_y}, {_z} with extra {_e} at {_lc}
+
+function playsound(s: text, lc: location, pit: number, v: number):
+	play raw sound "%{_s}%" at {_lc} with pitch {_pit} volume {_v}
+
+function getContent(name: text, contents: texts) :: text:
+	loop {_contents::*}:
+		set {split::*} to loop-value split at ": "
+		if {split::1} is {_name}:
+			return {split::2}
+	return ""

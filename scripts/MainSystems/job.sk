@@ -1,0 +1,220 @@
+#
+# {_uuid} = プレイヤーのUUIDを代入
+# {_job} = プレイヤーの職業を代入
+#
+#
+options:
+	program_name: JobAPI
+
+	lastjob_path: "../PlayerData/%{_uuid}%/info/lastjob.yml"
+	job_path: "../PlayerData/%{_uuid}%/job/%{_job}%.yml"
+
+	level_table: floor(30 * ceil({_level}/10) ^ 3.3 * log(ceil({_level}/10) * {_level_10}) / (2 * (2 * log(2) - 1/2)))
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+	set {list.profile::level} to 0
+	set {list.profile::xp} to 0
+	set {list.profile::needxp} to 150
+
+	set {list.profile::damage} to 2
+	set {list.profile::protection} to 2
+	set {list.profile::magicdamage} to 2
+	set {list.profile::mp} to 10
+	set {list.profile::health} to 100
+	set {list.profile::dex} to 0
+
+
+	set {list.upstatus::damage} to "Damage"
+	set {list.upstatus::protection} to "Protection"
+	set {list.upstatus::magicdamage} to "MagicDamage"
+	set {list.upstatus::mp} to "MP"
+	set {list.upstatus::health} to "Health"
+	set {list.upstatus::dex} to "DEX"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
+function plusCalc(n1: number, n2: number) :: number:
+	return {_n1} + {_n2}
+
+function loadProfile(p: player, job: text):
+	set {_uuid} to uuid of {_p}
+	if {_job} is "lastjob":
+		if file {@lastjob_path} exists:
+			set {_contents::*} to file contents of {@lastjob_path}
+			set {_job} to getContent("lastjob", {_contents::*})
+		else:
+			send "&c最後に保存された職業を取得できませんでした。" to {_p}
+			set {_p}'s level to 0
+			set {_p}'s level progress to 0
+			execute console command "/nte player %{_p}% suffix  &6[ビギナー&6] &7[&e×&7]"
+			stop
+
+	if file {@job_path} exists:
+		set {_contents::*} to file contents of {@job_path}
+		loop {list.profile::*}:
+			set {_num} to getContent(loop-index, {_contents::*}) parsed as number
+			set {mcmf.player.%{_uuid}%::%loop-index%} to {_num}
+
+	else:
+		loop {list.profile::*}:
+			set {mcmf.player.%{_uuid}%::%loop-index%} to loop-value
+
+	set {mcmf.player.%{_uuid}%::job} to {_job}
+	send "&a%{_job}%&aのデータを読み込みました" to {_p}
+
+	set {mcmf.player.%{_uuid}%::nowmp} to 0
+	set {mcmf.player.%{_uuid}%::nowhealth} to {mcmf.player.%{_uuid}%::health}
+	set {_p}'s level to {mcmf.player.%{_uuid}%::level}
+	set {_p}'s level progress to {mcmf.player.%{_uuid}%::xp} / {mcmf.player.%{_uuid}%::needxp} + 0.01
+	execute console command "/nte player %{_p}% suffix  &6[%{_job}%&6] &7[&e%{mcmf.player.%{_uuid}%::level}%&7]"
+	refsb({_p})
+
+function saveProfile(p: player):
+	set {_uuid} to uuid of {_p}
+	set {_job} to {mcmf.player.%{_uuid}%::job}
+	loop {list.profile::*}:
+		add "%loop-index%: %{mcmf.player.%{_uuid}%::%loop-index%}%" to {_contents::*}
+	if file {@job_path} does not exist:
+		create file {@job_path}
+	set file contents of {@job_path} to {_contents::*}
+	if file {@lastjob_path} does not exist:
+		create file {@lastjob_path}
+	set file contents of {@lastjob_path} to "lastjob: %{_job}%"
+	delete {mcmf.player.%{_uuid}%::*}
+
+function levelTable(p: player):
+	set {_uuid} to uuid of {_p}
+	while {mcmf.player.%{_uuid}%::needxp} <= {mcmf.player.%{_uuid}%::xp}:
+		add 1 to {mcmf.player.%{_uuid}%::level}
+		subtract {mcmf.player.%{_uuid}%::needxp} from {mcmf.player.%{_uuid}%::xp}
+		set {_level} to {mcmf.player.%{_uuid}%::level}
+		set {_level_10} to plusCalc({_level},10)
+		set {mcmf.player.%{_uuid}%::needxp} to {@level_table}
+		set {_levelup} to true
+		loop {list.upstatus::*}:
+			add 1 to {mcmf.player.%{_uuid}%::%loop-index%}
+			if loop-value is "health":
+				add {mcmf.player.%{_uuid}%::level} - 1 to {mcmf.player.%{_uuid}%::health}
+			else:
+				set {_n} to rounded down {mcmf.player.%{_uuid}%::level}/ 10
+				add {_n} to {mcmf.player.%{_uuid}%::%loop-index%}
+
+	if {_levelup} is set:
+		play "ENTITY_PLAYER_LEVELUP" to {_p} at volume 1
+		send "&6&lLEVEL UP! (CurrentLevel: %{mcmf.player.%{_uuid}%::level}%&6)" to {_p}
+		execute console command "/nte player %{_p}% suffix  &6[%{mcmf.player.%{_uuid}%::job}%&6] &7[&e%{mcmf.player.%{_uuid}%::level}%&7]"
+	set {_p}'s level to {player.level::%{_uuid}%}
+	set {_p}'s level progress to {mcmf.player.%{_uuid}%::xp} / {mcmf.player.%{_uuid}%::needxp} + 0.01
+	refsb({_p})
+
+function giveXP(p: player, xp: number):
+	set {_uuid} to uuid of {_p}
+	set {mcmf.player.%{_uuid}%::xp} to {mcmf.player.%{_uuid}%::xp} + {_xp}
+
+	play "ENTITY_EXPERIENCE_ORB_PICKUP" to {_p} at volume 1
+
+	levelTable({_p})
+
+function setXP(p: player, xp: number):
+	set {_uuid} to uuid of {_p}
+	set {mcmf.player.%{_uuid}%::xp} to {_xp}
+
+	levelTable({_p})
+
+command /job [<text>] [<text>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "create":
+				if arg-2 is set:
+					loop {save.job.list::*}:
+						if arg-2 is loop-value:
+							set {_stop} to true
+					if {_stop} is set:
+						send "&cその職業は既に存在しています"
+					else:
+						send "&a職業 &7[&6%arg-2%&7] &aを作成しました"
+						add arg-2 to {save.job.list::*}
+				else:
+					send "&c作成する職業名を入力して下さい"
+			if arg-1 is "set":
+				if arg-2 is set:
+					loop {save.job.list::*}:
+						if loop-value is arg-2:
+							set {_stop} to true
+							saveProfile(player)
+							loadProfile(player, arg-2)
+							stop
+					send "&cその職業は見つかりませんでした"
+				else:
+					send "&c設定する職業名を入力してください"
+			if arg-1 is "reset":
+				send "&aステータスをリセットしました"
+				set {_uuid} to player's uuid
+				set {_job} to {mcmf.player.%player's uuid%::job}
+				delete file {@job_path}
+				loadProfile(player, {_job})
+			if arg-1 is "list":
+				if {save.job.list::*} is set:
+					send "&7-&a現在の職業リスト&7-"
+					loop {save.job.list::*}:
+						send "&7・&6%loop-value%"
+				else:
+					send "&c職業が存在しません"
+			if arg-1 is "delete":
+				if arg-2 is set:
+					loop {save.job.list::*}:
+						if arg-2 is loop-value:
+							delete {save.job.list::%loop-index%}
+							send "&c職業 &7[&6%arg-2%&7] &cを削除しました"
+							stop
+					send "&c指定された職業は見つかりませんでした"
+				else:
+					send "&c削除する職業名を入力してください"
+		else:
+			send "&c実行内容を入力してください"
+
+command /xp [<text>] [<number>]:
+	permission: admin
+	trigger:
+		if arg-1 is set:
+			if arg-1 is "give":
+				if arg-2 is set:
+					send "&a%arg-2%&aXPを獲得しました"
+					giveXP(player,arg-2)
+					stop
+				else:
+					send "&c付与するXP値を入力してください"
+			if arg-1 is "set":
+				if arg-2 is set:
+					send "&a%arg-2%&aXPに設定しました"
+					setXP(player,arg-2)
+					stop
+				else:
+					send "&c設定するXP値を入力してください"
+		else:
+			send "&c実行内容を入力してください"
+
+command /status:
+	trigger:
+		set {_uuid} to player's uuid
+		send "&7&m------------------------" to player
+		send "&6&lXP: &f%{mcmf.player.%player's uuid%::xp}%" to player
+		send "&6&lNeedXP: &f%{mcmf.player.%player's uuid%::needxp} - {mcmf.player.%player's uuid%::xp}%" to player
+		send "&7&m------------------------" to player
+		send "&c&l攻撃力: &f%{mcmf.player.%player's uuid%::damage}%" to player
+		send "&9&l防御力: &f%{mcmf.player.%player's uuid%::protection}%" to player
+		send "&e&l魔力: &f%{mcmf.player.%player's uuid%::magicdamage}%" to player
+		send "&a&l体力: &f%{mcmf.player.%player's uuid%::health}%" to player
+		send "&d&lMP: &f%{mcmf.player.%player's uuid%::mp}%" to player
+		send "&2&lDEX: &f%{mcmf.player.%player's uuid%::dex}%" to player
+		send "&7&m------------------------" to player
+
+on join:
+	loadProfile(player,"lastjob")
+
+on quit:
+	saveProfile(player)

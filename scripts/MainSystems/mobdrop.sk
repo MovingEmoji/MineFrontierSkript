@@ -1,0 +1,16 @@
+options:
+	program_name: MobDrop
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
+on item spawn:
+	if event-item's name contains "mobdrop":
+		cancel event
+		loop event-item's lore:
+			set {_l} to loop-value
+			replace all "§f" with "" in {_l}
+			drop {item.save.list::%{_l}%} at location of event-entity without velocity

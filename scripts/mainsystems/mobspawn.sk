@@ -1,8 +1,0 @@
-on load:
-	broadcast "&7[&6*&7] &aSuccessfully registered mob spawn effect system."
-on unload:
-	broadcast "&7[&6*&7] &cUnregistered mob spawn effect system."
-
-on spawn:
-	if event-entity is mob:
-		particle(10,"CLOUD",0.5,0.5,0.5,0.1,location of event-entity)

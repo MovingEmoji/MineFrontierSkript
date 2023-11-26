@@ -1,0 +1,103 @@
+options:
+	program_name: StatusCalc
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
+function calc(p: player, i: item, slot: text):
+	set {_uuid} to uuid of {_p}
+	set {_parameters} to tag "Parameters" of nbt of {_i}
+	set {_stones} to tag "Stones" of nbt of {_i}
+	if tag "Job" of {_parameters} is "全職業":
+		set {_t} to true
+	else if tag "Job" of {_parameters} contains {mcmf.player.%{_uuid}%::job}:
+		set {_t} to true
+	if {_t} is set:
+		set {_t} to false
+		if tag "Slot" of {_parameters} is {_slot}:
+			set {_t} to true	
+		if {_t} is true:
+			set {_t} to false
+			if tag "Level" of {_parameters} is -1:
+				set {_t} to true
+			else if tag "Level" of {_parameters} <= {mcmf.player.%{_uuid}%::level}:
+				set {_t} to true
+			if {_t} is true:
+				set {_t} to false
+				set {_id} to tag "Id" of {_parameters}
+				set {_newparam} to tag "Parameters" of nbt of {item.save.list::%{_id}%}
+				if tag "Version" of {_parameters} is tag "Version" of {_newparam}:
+					set {_t} to true
+				if {_t} is true:
+					loop {list.upstatus::*}:
+						set {_%loop-index%} to tag "%loop-value%" of {_parameters}
+					if tag "Stone" of {_parameters} is not 0:
+						set {_c} to 1
+						set {_l} to tag "Stone" of {_parameters}
+						loop {_l} times:
+							if tag "Stone%{_c}%" of {_stones} is not 0:
+								set {_id} to tag "Stone%{_c}%" of {_stones}
+								set {_sparameters} to tag "Parameters" of nbt of {item.save.list::%{_id}%}
+								loop {list.upstatus::*}:
+									set {_n} to tag "%loop-value-2%" of {_sparameters}
+									set {_%loop-index%} to {_%loop-index%} + {_n}
+							delete {_n}
+							add 1 to {_c}
+					loop {list.upstatus::*}:
+						add {_%loop-index%} to {mcmf.player.%{_uuid}%::result%loop-index%}
+				else:
+					send "&c装備しているアイテムが最新版ではありませんGUIよりアップデートしてください &7(%{_slot}%&7)" to {_p}
+function playercalc(p: player):
+	set {_uuid} to uuid of {_p}
+
+	loop {list.upstatus::*}:
+		set {mcmf.player.%{_uuid}%::result%loop-index%} to 0
+
+	set {_item} to {_p}'s tool
+	calc({_p},{_item},"メインハンド")
+	set {_item} to {_p}'s offhand
+	calc({_p},{_item},"オフハンド")
+	set {_item} to {_p}'s helmet
+	calc({_p},{_item},"アーマー")
+	set {_item} to {_p}'s chestplate
+	calc({_p},{_item},"アーマー")
+	set {_item} to {_p}'s leggings
+	calc({_p},{_item},"アーマー")
+	set {_item} to {_p}'s boots
+	calc({_p},{_item},"アーマー")
+
+	if {mcmf.player.%{_uuid}%::debugmode} is set:
+		refsb({_p})
+
+on join:
+	wait 5 tick
+	playercalc(player)
+
+command /calc:
+	trigger:
+		playercalc(player)
+
+on tool change:
+	play "UI_BUTTON_CLICK" to player at volume 0.05
+	wait a tick
+	playercalc(player)
+
+on player armor change:
+	playercalc(player)
+
+on offhand switch:
+	cancel event
+
+on drop:
+	playercalc(player)
+
+on pickup:
+	wait a tick
+	playercalc(player)
+
+on inventory click:
+	wait a tick
+	playercalc(player)

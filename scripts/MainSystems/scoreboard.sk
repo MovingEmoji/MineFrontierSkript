@@ -1,14 +1,26 @@
+options:
+	program_name: ScoreBoardAPI
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
 function refsb(p: player):
 	wait 2 tick
 	set {_uuid} to uuid of {_p}
 	delete {_p}'s sidebar
-	if {player.job::%{_uuid}%} is set:
-		set {_level} to {player.level::%{_uuid}%}
-		set {_job} to {player.job::%{_uuid}%}
-		set {_xp} to {player.xp::%{_uuid}%}
-		set {_needxp} to {player.needxp::%{_uuid}%} - {player.xp::%{_uuid}%}
+	if {mcmf.player.%{_uuid}%::job} is set:
+		set {_level} to {mcmf.player.%{_uuid}%::level}
+		set {_job} to {mcmf.player.%{_uuid}%::job}
+		set {_xp} to {mcmf.player.%{_uuid}%::xp}
+		set {_needxp} to {mcmf.player.%{_uuid}%::needxp} - {mcmf.player.%{_uuid}%::xp}
 		set {_gold} to {player.gold::%{_uuid}%}
-		if {debug.scoreboard::%{_uuid}%} is set:
+		loop {list.upstatus::*}:
+			set {_%loop-index%} to {mcmf.player.%{_uuid}%::%loop-index%}
+			set {_result%loop-index%} to {mcmf.player.%{_uuid}%::result%loop-index%}
+		if {mcmf.player.%{_uuid}%::debugmode} is set:
 			set name of sidebar of {_p} to "&b&lMineFrontier [Debug]"
 			set score "&1&7&m-------------------" in sidebar of {_p} to 0
 			set score " " in sidebar of {_p} to -1
@@ -17,12 +29,12 @@ function refsb(p: player):
 			set score "&6&l残りの必要経験値&b: &7%{_needxp}%" in sidebar of {_p} to -4
 			set score "&6&l職業&b: &7%{_job}%" in sidebar of {_p} to -5
 			set score "  " in sidebar of {_p} to -6
-			set score "&c&l攻撃力&b: &7%{player.damage::%{_uuid}%}% + %{result.damage::%{_uuid}%}%" in sidebar of {_p} to -7
-			set score "&9&l防御力&b: &7%{player.protection::%{_uuid}%}% + %{result.protection::%{_uuid}%}%" in sidebar of {_p} to -8
-			set score "&e&l魔力&b: &7%{player.magicdamage::%{_uuid}%}% + %{result.magicdamage::%{_uuid}%}%" in sidebar of {_p} to -9
-			set score "&a&l体力&b: &7%{player.health::%{_uuid}%}% + %{result.health::%{_uuid}%}%" in sidebar of {_p} to -10
-			set score "&d&lMP&b: &7%{player.mp::%{_uuid}%}% + %{result.mp::%{_uuid}%}%" in sidebar of {_p} to -11
-			set score "&2&lDEX&b: &7%{player.dex::%{_uuid}%}% + %{result.dex::%{_uuid}%}%" in sidebar of {_p} to -12
+			set score "&c&l攻撃力&b: &7%{_damage}% + %{_resultdamage}%" in sidebar of {_p} to -7
+			set score "&9&l防御力&b: &7%{_protection}% + %{_resultprotection}%" in sidebar of {_p} to -8
+			set score "&e&l魔力&b: &7%{_magicdamage}% + %{_resultmagicdamage}%" in sidebar of {_p} to -9
+			set score "&a&l体力&b: &7%{_health}% + %{_resulthealth}%" in sidebar of {_p} to -10
+			set score "&d&lMP&b: &7%{_mp}% + %{_resultmp}%" in sidebar of {_p} to -11
+			set score "&2&lDEX&b: &7%{_dex}% + %{_resultdex}%" in sidebar of {_p} to -12
 			set score "   " in sidebar of {_p} to -13
 			set score "&7&m-------------------" in sidebar of {_p} to -14
 		else:
@@ -48,6 +60,18 @@ function refsb(p: player):
 		set score "&d&lプレイヤー数&b: &7%size of all players% / 300" in sidebar of {_p} to -3
 		set score "   " in sidebar of {_p} to -4
 		set score "&7&m-------------------" in sidebar of {_p} to -5
+
+command /debug:
+	permission: admin
+	trigger:
+		if {mcmf.player.%player's uuid%::debugmode} is set:
+			delete {mcmf.player.%player's uuid%::debugmode}
+			send "&e&l［デバッグ］: &fデバッグモードをオフにしました"
+		else:
+			set {mcmf.player.%player's uuid%::debugmode} to true
+			send "&e&l［デバッグ］: &fデバッグモードをオンにしました"
+		refsb(player)
+
 every 1 minute:
 	loop all players:
 		if {player.job::%loop-player's uuid%} is set:

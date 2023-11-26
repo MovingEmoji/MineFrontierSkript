@@ -124,7 +124,7 @@ log player commands: true
 # They will be logged as [INFORMATION] in this format: '<player>: /<command> <arguments>'
 
 
-number accuracy: 2
+number accuracy: 10
 # How many digits should be displayed after the dot at maximum when displaying numbers.
 # Zeroes will never be displayed at all, so this setting only applies to numbers that actually have a decimal part with one or more non-zero digits.
 # Money bypasses this setting and is displayed as configured in your economy plugin if you have one.

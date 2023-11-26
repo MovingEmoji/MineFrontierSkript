@@ -1,0 +1,29 @@
+options:
+	program_name: DamageCalc	
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
+
+on damage:
+	if victim is a player:
+		#プレヤーが受けるダメージ計算
+	else:
+		#敵MOBに与えるダメージ計算
+		if attacker is player:
+			if damage cause is attack:
+				set damage to 0
+
+				set {_r} to random integer between 95 and 105
+				set {_r} to {_r} / 100
+				set {_parameters} to tag "Parameters" of nbt of victim's leggings
+				set {_protection} to tag "Protection" of {_parameters}
+				set {_dex} to ({mcmf.player.%attacker's uuid%::dex} + {mcmf.player.%attacker's uuid%::resultdex} + 15) / ({mcmf.player.%attacker's uuid%::dex} + {mcmf.player.%attacker's uuid%::resultdex} + 100 + 15)
+				set {_dex} to {_dex} * ({mcmf.player.%attacker's uuid%::dex} + {mcmf.player.%attacker's uuid%::resultdex} + 17) * 0.5 / ({mcmf.player.%attacker's uuid%::dex} + {mcmf.player.%attacker's uuid%::resultdex} + 10)
+				set {_damage} to rounded down ({mcmf.player.%attacker's uuid%::damage} + {mcmf.player.%attacker's uuid%::resultdamage}) * {_r} / {_protection}
+				if chance of {_dex}:
+
+				broadcast "クリティカル: %{_dex}%, 防御値: %{_protection}%, 与ダメ: %{_damage}%"

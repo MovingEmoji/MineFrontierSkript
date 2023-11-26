@@ -1,0 +1,13 @@
+options:
+	program_name: ClearData
+
+on load:
+	broadcast "&a{@program_name} は正常に読み込まれました。"
+
+on unload:
+	broadcast "&c{@program_name} は無効化されました。"
+
+on quit:
+	wait a tick
+	delete file "./world/playerdata/%player's uuid%.dat"
+	delete file "./world/playerdata/%player's uuid%.dat_old"
